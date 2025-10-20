@@ -1,0 +1,2 @@
+"""Lumiere Backend Application."""
+
