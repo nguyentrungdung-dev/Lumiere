@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { authApi } from '../services/api';
+import { authApi } from '../services/userApi';
 import type { User, UserCreate, UserLogin, UserUpdate, AuthContextType } from '../types';
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const UserAuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
+interface UserAuthProviderProps {
   children: ReactNode;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const UserAuthProvider: React.FC<UserAuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -77,14 +77,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateUser,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <UserAuthContext.Provider value={value}>{children}</UserAuthContext.Provider>;
 };
 
 // Custom hook to use auth context
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
+export const useUserAuth = (): AuthContextType => {
+  const context = useContext(UserAuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useUserAuth must be used within a UserAuthProvider');
   }
   return context;
 };

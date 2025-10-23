@@ -1,15 +1,21 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { UserAuthProvider } from './context/UserAuthContext';
+import { AdminAuthProvider } from './context/AdminAuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Pages (we'll create these next)
-import LoginPage from './pages/LoginPage.tsx';
-import RegisterPage from './pages/RegisterPage.tsx';
-import DashboardPage from './pages/DashboardPage.tsx';
-import ProfilePage from './pages/ProfilePage.tsx';
+// User Pages
+import UserLoginPage from './pages/user/UserLoginPage';
+import UserRegisterPage from './pages/user/UserRegisterPage';
+import UserDashboardPage from './pages/user/UserDashboardPage';
+import UserProfilePage from './pages/user/UserProfilePage';
+
+// Admin Pages
+import AdminLoginPage from './pages/admin/AdminLoginPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 
 // Components
-import ProtectedRoute from './components/auth/ProtectedRoute';
+import UserProtectedRoute from './components/auth/UserProtectedRoute';
+import AdminProtectedRoute from './components/auth/AdminProtectedRoute';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -24,23 +30,67 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+      <Router>
+        <Routes>
+          {/* Admin Portal Routes */}
+          <Route path="/admin/login" element={
+            <AdminAuthProvider>
+              <AdminLoginPage />
+            </AdminAuthProvider>
+          } />
+          <Route path="/admin/dashboard" element={
+            <AdminAuthProvider>
+              <AdminProtectedRoute>
+                <AdminDashboardPage />
+              </AdminProtectedRoute>
+            </AdminAuthProvider>
+          } />
+          <Route path="/admin/*" element={
+            <AdminAuthProvider>
+              <AdminProtectedRoute>
+                <Navigate to="/admin/dashboard" replace />
+              </AdminProtectedRoute>
+            </AdminAuthProvider>
+          } />
 
-            {/* Protected routes */}
-            <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          {/* User Portal Routes */}
+          <Route path="/login" element={
+            <UserAuthProvider>
+              <UserLoginPage />
+            </UserAuthProvider>
+          } />
+          <Route path="/register" element={
+            <UserAuthProvider>
+              <UserRegisterPage />
+            </UserAuthProvider>
+          } />
+          <Route path="/app/dashboard" element={
+            <UserAuthProvider>
+              <UserProtectedRoute>
+                <UserDashboardPage />
+              </UserProtectedRoute>
+            </UserAuthProvider>
+          } />
+          <Route path="/app/profile" element={
+            <UserAuthProvider>
+              <UserProtectedRoute>
+                <UserProfilePage />
+              </UserProtectedRoute>
+            </UserAuthProvider>
+          } />
+          <Route path="/app/*" element={
+            <UserAuthProvider>
+              <UserProtectedRoute>
+                <Navigate to="/app/dashboard" replace />
+              </UserProtectedRoute>
+            </UserAuthProvider>
+          } />
 
-            {/* Default redirect */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </Router>
-      </AuthProvider>
+          {/* Default redirects */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Router>
     </QueryClientProvider>
   );
 }

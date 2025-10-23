@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuth } from '../hooks/useAuth';
-import { loginSchema, type LoginFormData } from '../utils/validation';
-import Input from '../components/common/Input';
-import PasswordInput from '../components/common/PasswordInput';
-import Button from '../components/common/Button';
+import { useAuth } from '../../hooks/useAuth';
+import { loginSchema, type LoginFormData } from '../../utils/validation';
+import Input from '../../components/common/Input';
+import PasswordInput from '../../components/common/PasswordInput';
+import Button from '../../components/common/Button';
 
-const LoginPage = () => {
+const UserLoginPage = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,7 +30,7 @@ const LoginPage = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
-      navigate('/dashboard');
+      navigate('/app/dashboard');
     }
   }, [isAuthenticated, authLoading, navigate]);
 
@@ -176,4 +176,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default UserLoginPage;

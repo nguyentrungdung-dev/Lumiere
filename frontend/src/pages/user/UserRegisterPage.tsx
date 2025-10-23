@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuth } from '../hooks/useAuth';
-import { registerSchema, type RegisterFormData, calculatePasswordStrength } from '../utils/validation';
-import Input from '../components/common/Input';
-import PasswordInput from '../components/common/PasswordInput';
-import Button from '../components/common/Button';
+import { useAuth } from '../../hooks/useAuth';
+import { registerSchema, type RegisterFormData, calculatePasswordStrength } from '../../utils/validation';
+import Input from '../../components/common/Input';
+import PasswordInput from '../../components/common/PasswordInput';
+import Button from '../../components/common/Button';
 
-const RegisterPage = () => {
+const UserRegisterPage = () => {
   const navigate = useNavigate();
   const { register: registerUser, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,7 +41,7 @@ const RegisterPage = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
-      navigate('/dashboard');
+      navigate('/app/dashboard');
     }
   }, [isAuthenticated, authLoading, navigate]);
 
@@ -228,4 +228,4 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage;
+export default UserRegisterPage;
