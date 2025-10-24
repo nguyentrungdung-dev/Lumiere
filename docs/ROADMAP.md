@@ -21,8 +21,8 @@ This document outlines the complete development roadmap for Lumiere, covering bo
 #### 1.2 Database Models
 - [x] Create all SQLAlchemy models based on schema (39 tables)
 - [x] Set up relationships (ForeignKeys, back_populates)
-- [ ] Create initial migration
-- [ ] Test database connection
+- [x] Create initial migration
+- [x] Test database connection
 
 #### 1.3 Authentication System
 - [x] POST `/auth/register` - Create new user with password hashing
@@ -41,29 +41,32 @@ This document outlines the complete development roadmap for Lumiere, covering bo
 ### Frontend Tasks
 
 #### 1.5 Project Setup
-- [ ] Initialize Vite + React + TypeScript
-- [ ] Install dependencies (React Router, Axios, TailwindCSS)
-- [ ] Configure TypeScript (tsconfig.json)
-- [ ] Set up API service layer (`services/api.ts`)
-- [ ] Configure environment variables
+- [x] Initialize Vite + React + TypeScript
+- [x] Install dependencies (React Router, Axios, TailwindCSS)
+- [x] Configure TypeScript (tsconfig.json)
+- [x] Set up API service layer (`services/userApi.ts`)
+- [x] Configure environment variables
 
 #### 1.6 Authentication UI
-- [ ] `LoginPage.tsx` - Login form with validation
-- [ ] `RegisterPage.tsx` - Registration form
-- [ ] Auth context/hook for managing user state
-- [ ] Protected route wrapper component
-- [ ] Token storage (localStorage + axios interceptors)
-- [ ] Error handling and display
+- [x] `UserLoginPage.tsx` - Login form with validation
+- [x] `UserRegisterPage.tsx` - Registration form
+- [x] Auth context/hook for managing user state
+- [x] Protected route wrapper component
+- [x] Token storage (localStorage + axios interceptors)
+- [x] Error handling and display
 
 #### 1.7 Layout & Navigation
-- [ ] `Layout.tsx` - Main app layout with sidebar/navbar
-- [ ] `Dashboard.tsx` - Landing page after login
-- [ ] Routing setup (React Router v6)
-- [ ] Navigation menu component
-- [ ] User profile dropdown
+- [x] `UserLayout.tsx` - Main app layout with sidebar/navbar
+- [x] `UserDashboardPage.tsx` - Landing page after login
+- [x] Routing setup (React Router v6)
+- [x] Navigation menu component
+- [x] User profile dropdown
 
 ### Deliverable
-✅ Users can register, login, and see a basic dashboard.
+✅ **PHASE 1 COMPLETE** - Users can register, login, and see a basic dashboard.
+
+### 📝 Note on Admin Module
+**Built Early (out of order):** Admin Portal (both backend & frontend) was completed early for monitoring purposes. This is technically part of Phase 3, but has been moved ahead of schedule.
 
 ---
 
@@ -72,13 +75,15 @@ This document outlines the complete development roadmap for Lumiere, covering bo
 ### Backend Tasks
 
 #### 2.1 Data Upload Module
-- [ ] POST `/data/upload` - CSV file upload endpoint
-- [ ] File parser (parse CSV → store in temp table or user schema)
-- [ ] GET `/data/sources` - List all data sources
-- [ ] GET `/data/source/{id}` - Get specific data source
-- [ ] DELETE `/data/source/{id}` - Delete data source
-- [ ] Service for managing data source metadata
-- [ ] File size and format validation
+- [x] POST `/data/upload` - CSV file upload endpoint
+- [x] File parser (parse CSV → store in temp table or user schema)
+- [x] GET `/data/sources` - List all data sources
+- [x] GET `/data/source/{id}` - Get specific data source
+- [x] PATCH `/data/source/{id}` - Update data source
+- [x] DELETE `/data/source/{id}` - Delete data source
+- [x] GET `/data/source/{id}/preview` - Preview data with pagination
+- [x] Service for managing data source metadata
+- [x] File size and format validation (50MB max)
 
 #### 2.2 Database Connector (Optional for Phase 2)
 - [ ] POST `/data/connect` - Connect to external PostgreSQL/MySQL
@@ -87,25 +92,32 @@ This document outlines the complete development roadmap for Lumiere, covering bo
 - [ ] Test connection endpoint
 
 #### 2.3 AI Query Module
-- [ ] POST `/ai/query` - Generate SQL from natural language
-- [ ] LLM integration (OpenAI API or similar)
-- [ ] SQL execution on user data
-- [ ] Return structured results
-- [ ] Error handling for invalid SQL
-- [ ] Query validation and sanitization
-- [ ] Store query history
+- [x] POST `/ai/query` - Generate SQL from natural language
+- [x] LLM integration (OpenAI GPT-4o-mini)
+- [x] SQL execution on user data (using pandasql)
+- [x] Return structured results
+- [x] Error handling for invalid SQL
+- [x] Query validation and sanitization
+- [x] Store query history
+- [x] GET `/ai/queries` - Get query history with pagination
+- [x] GET `/ai/query/{id}` - Get query details
+- [x] POST `/ai/query/{id}/rerun` - Re-run previous query
+- [x] DELETE `/ai/query/{id}` - Delete query from history
 
 #### 2.4 Chart Generation Module
-- [ ] POST `/ai/chart` - Analyze SQL results and suggest chart type
-- [ ] Generate Chart.js compatible configuration
-- [ ] Return chart config JSON
-- [ ] Support multiple chart types (bar, line, pie, scatter)
+- [x] POST `/ai/chart` - Analyze SQL results and suggest chart type
+- [x] Generate Chart.js compatible configuration
+- [x] Return chart config JSON
+- [x] Support multiple chart types (bar, line, pie, scatter, doughnut, area)
+- [x] LLM-powered chart type selection
+- [x] Automatic color and styling suggestions
 
 #### 2.5 Insight Generation Module
-- [ ] POST `/ai/insight` - Generate insights from data
-- [ ] Summarization using LLM
-- [ ] Store insights in database
-- [ ] Link insights to queries
+- [x] POST `/ai/insight` - Generate insights from data
+- [x] Summarization using LLM (GPT-4o-mini)
+- [x] Business-focused recommendations
+- [x] Link insights to queries
+- [x] Key findings extraction
 
 ### AI Layer Tasks
 
@@ -292,9 +304,10 @@ This document outlines the complete development roadmap for Lumiere, covering bo
 
 Update this section as phases are completed:
 
-- [ ] **Phase 1 Complete** - Date: ___________
-- [ ] **Phase 2 Complete** - Date: ___________
-- [ ] **Phase 3 Complete** - Date: ___________
+- [x] **Phase 1 Complete** - Date: October 24, 2024
+- [x] **Phase 2 Backend Complete** - Date: October 24, 2024 (Frontend pending)
+- [ ] **Phase 2 Frontend In Progress** - Started: ___________
+- [ ] **Phase 3 Complete** - Date: ___________ (Admin Module completed early on Oct 23-24)
 
 ---
 
