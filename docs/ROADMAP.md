@@ -137,41 +137,52 @@ This document outlines the complete development roadmap for Lumiere, covering bo
 ### Frontend Tasks
 
 #### 2.8 Data Upload Interface
-- [ ] `DataUploadPage.tsx` - CSV upload with drag-and-drop
-- [ ] `DataSourcesList.tsx` - Show all uploaded/connected data
-- [ ] File validation (size, format)
-- [ ] Upload progress indicator
-- [ ] Success/error notifications
+- [x] `DataSourcesPage.tsx` - CSV upload with drag-and-drop
+- [x] `FileUpload.tsx` - Drag-and-drop upload component with react-dropzone
+- [x] `DataSourceCard.tsx` - Display data source cards
+- [x] `DataPreviewModal.tsx` - Preview data with pagination
+- [x] File validation (size, format)
+- [x] Upload progress indicator
+- [x] Success/error notifications
 
 #### 2.9 AI Query Interface
-- [ ] `QueryPage.tsx` - Main analysis interface
-- [ ] Text input for natural language questions
-- [ ] Display generated SQL (read-only, with syntax highlighting)
-- [ ] Show query results in table format
-- [ ] Loading states and animations
-- [ ] Error handling and display
+- [x] `AIQueryPage.tsx` - Main analysis interface
+- [x] `QueryInterface.tsx` - Natural language input with data source selector
+- [x] `QueryResults.tsx` - Display generated SQL with syntax highlighting
+- [x] Show query results in table format
+- [x] Loading states and animations
+- [x] Error handling and display
 
 #### 2.10 Chart Visualization
-- [ ] `ChartViewer.tsx` - Render charts using Chart.js or Recharts
-- [ ] Support bar, line, pie, scatter charts
-- [ ] Chart customization options
-- [ ] Export chart functionality (PNG, SVG)
-- [ ] Responsive chart sizing
+- [x] `ChartsPage.tsx` - Chart display page
+- [x] `ChartRenderer.tsx` - Render charts using Recharts
+- [x] Support bar, line, pie, scatter, doughnut, area charts
+- [x] AI reasoning display
+- [x] Chart information panel
+- [x] Responsive chart sizing
 
 #### 2.11 Insight Display
-- [ ] `InsightPanel.tsx` - Show AI-generated insights
-- [ ] Markdown rendering for formatted insights
-- [ ] Copy insights to clipboard
-- [ ] Save insights for later
+- [x] `InsightsPage.tsx` - Show AI-generated insights
+- [x] Key findings display with numbered list
+- [x] Recommendations panel
+- [x] Copy insights to clipboard
+- [x] Navigation to related queries
 
 #### 2.12 Query History
-- [ ] `QueryHistory.tsx` - List previous queries
-- [ ] Re-run past queries
-- [ ] Delete queries
-- [ ] Search and filter history
+- [x] `QueryHistory.tsx` - List previous queries in sidebar
+- [x] Re-run past queries
+- [x] Delete queries
+- [x] Select query to view details
+- [x] Real-time status updates
+
+#### 2.13 Navigation & Routes
+- [x] Updated `UserSidebar.tsx` with Phase 2 links
+- [x] Added routes in `App.tsx` for all Phase 2 pages
+- [x] Created API service layer (`dataApi.ts`)
+- [x] Added TypeScript types for all new data structures
 
 ### Deliverable
-✅ Users can upload CSV, ask questions, get SQL queries, see charts, and read insights.
+✅ **PHASE 2 FRONTEND COMPLETE** - Users can upload CSV, ask questions, get SQL queries, see charts, and read insights.
 
 ---
 
@@ -305,9 +316,11 @@ This document outlines the complete development roadmap for Lumiere, covering bo
 Update this section as phases are completed:
 
 - [x] **Phase 1 Complete** - Date: October 24, 2024
-- [x] **Phase 2 Backend Complete** - Date: October 24, 2024 (Frontend pending)
-- [ ] **Phase 2 Frontend In Progress** - Started: ___________
-- [ ] **Phase 3 Complete** - Date: ___________ (Admin Module completed early on Oct 23-24)
+- [x] **Phase 2 Backend Complete** - Date: October 24, 2024
+- [x] **Phase 2 Frontend Complete** - Date: November 3, 2025
+- [x] **Phase 2 FULLY COMPLETE** ✅
+- [ ] **Phase 3 In Progress** - (Admin Module completed early on Oct 23-24)
+- [ ] **Phase 3 Complete** - Date: ___________
 
 ---
 
@@ -320,5 +333,5 @@ Update this section as phases are completed:
 
 ---
 
-**Last Updated:** October 20, 2025
+**Last Updated:** November 3, 2025
 

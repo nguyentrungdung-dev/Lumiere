@@ -8,6 +8,10 @@ import UserLoginPage from './pages/user/UserLoginPage';
 import UserRegisterPage from './pages/user/UserRegisterPage';
 import UserDashboardPage from './pages/user/UserDashboardPage';
 import UserProfilePage from './pages/user/UserProfilePage';
+import { DataSourcesPage } from './pages/user/DataSourcesPage';
+import { AIQueryPage } from './pages/user/AIQueryPage';
+import { ChartsPage } from './pages/user/ChartsPage';
+import { InsightsPage } from './pages/user/InsightsPage';
 
 // Admin Pages
 import AdminLoginPage from './pages/admin/AdminLoginPage';
@@ -75,6 +79,34 @@ function App() {
             <UserAuthProvider>
               <UserProtectedRoute>
                 <UserProfilePage />
+              </UserProtectedRoute>
+            </UserAuthProvider>
+          } />
+          <Route path="/app/data" element={
+            <UserAuthProvider>
+              <UserProtectedRoute>
+                <DataSourcesPage />
+              </UserProtectedRoute>
+            </UserAuthProvider>
+          } />
+          <Route path="/app/query" element={
+            <UserAuthProvider>
+              <UserProtectedRoute>
+                <AIQueryPage />
+              </UserProtectedRoute>
+            </UserAuthProvider>
+          } />
+          <Route path="/app/charts" element={
+            <UserAuthProvider>
+              <UserProtectedRoute>
+                <ChartsPage />
+              </UserProtectedRoute>
+            </UserAuthProvider>
+          } />
+          <Route path="/app/insights" element={
+            <UserAuthProvider>
+              <UserProtectedRoute>
+                <InsightsPage />
               </UserProtectedRoute>
             </UserAuthProvider>
           } />
