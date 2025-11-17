@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BackButton } from '../../components/common/BackButton';
 import { QueryInterface } from '../../components/user/query/QueryInterface';
 import { QueryResults } from '../../components/user/query/QueryResults';
 import { QueryHistory } from '../../components/user/query/QueryHistory';
@@ -118,10 +119,13 @@ export const AIQueryPage: React.FC = () => {
   };
 
   return (
-    <div className="h-full">
+    <div className="h-full space-y-4 sm:space-y-6">
+      {/* Back Button */}
+      <BackButton to="/app/dashboard" />
+      
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">AI Query Assistant</h1>
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">AI Query Assistant</h1>
         <p className="mt-1 text-sm text-gray-600">
           Ask questions in natural language and get SQL-powered insights
         </p>
@@ -168,9 +172,9 @@ export const AIQueryPage: React.FC = () => {
       )}
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column: Query Interface & Results */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           <QueryInterface
             dataSources={dataSources}
             onQueryExecute={setCurrentResult}

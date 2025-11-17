@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { BackButton } from '../../components/common/BackButton';
 import { ChartRenderer } from '../../components/user/charts/ChartRenderer';
 import type { ChartGenerationResponse } from '../../types';
 
@@ -16,26 +17,23 @@ export const ChartsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Back Button */}
+      <BackButton to="/app/query" />
+      
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Data Visualizations</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Data Visualizations</h1>
           <p className="mt-1 text-sm text-gray-600">
             AI-generated charts from your query results
           </p>
         </div>
         {chartData && (
-          <div className="flex space-x-3">
-            <button
-              onClick={() => navigate('/app/query')}
-              className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors font-medium"
-            >
-              ← Back to Query
-            </button>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <button
               onClick={downloadChart}
-              className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors font-medium"
+              className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
             >
               📥 Export Chart
             </button>

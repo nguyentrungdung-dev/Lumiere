@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { BackButton } from '../../components/common/BackButton';
 import { FileUpload } from '../../components/user/data/FileUpload';
 import { DataSourceCard } from '../../components/user/data/DataSourceCard';
 import { DataPreviewModal } from '../../components/user/data/DataPreviewModal';
@@ -84,18 +85,21 @@ export const DataSourcesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Back Button */}
+      <BackButton to="/app/dashboard" />
+      
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Data Sources</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Data Sources</h1>
           <p className="mt-1 text-sm text-gray-600">
             Upload and manage your CSV data files
           </p>
         </div>
         <button
           onClick={() => setShowUpload(!showUpload)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
         >
           {showUpload ? 'Cancel Upload' : '+ Upload Data'}
         </button>
@@ -118,8 +122,8 @@ export const DataSourcesPage: React.FC = () => {
 
       {/* Stats */}
       {!isLoading && dataSources.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Sources</p>

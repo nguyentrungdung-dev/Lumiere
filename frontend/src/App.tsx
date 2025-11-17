@@ -8,6 +8,8 @@ import UserLoginPage from './pages/user/UserLoginPage';
 import UserRegisterPage from './pages/user/UserRegisterPage';
 import UserDashboardPage from './pages/user/UserDashboardPage';
 import UserProfilePage from './pages/user/UserProfilePage';
+import ForgotPasswordPage from './pages/user/ForgotPasswordPage';
+import ResetPasswordPage from './pages/user/ResetPasswordPage';
 import { DataSourcesPage } from './pages/user/DataSourcesPage';
 import { AIQueryPage } from './pages/user/AIQueryPage';
 import { ChartsPage } from './pages/user/ChartsPage';
@@ -76,6 +78,8 @@ function App() {
               <UserRegisterPage />
             </UserAuthProvider>
           } />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/app/dashboard" element={
             <UserAuthProvider>
               <UserProtectedRoute>

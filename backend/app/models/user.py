@@ -21,6 +21,8 @@ class User(Base):
     locale = Column(String, comment="User preferred language (e.g., vi, en)")
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False, comment="Platform administrator flag")
+    reset_token = Column(String, nullable=True, comment="Password reset token")
+    reset_token_expiry = Column(DateTime(timezone=True), nullable=True, comment="Token expiration time")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     last_login_at = Column(DateTime(timezone=True))
