@@ -174,3 +174,148 @@ export interface InsightGenerationResponse {
   recommendations: string[];
 }
 
+// Admin Types
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string;
+  full_name: string | null;
+  is_active: boolean;
+  is_admin: boolean;
+  created_at: string;
+  last_login_at: string | null;
+}
+
+export interface AdminLogin {
+  username: string;
+  password: string;
+}
+
+export interface AdminTokenResponse {
+  access_token: string;
+  token_type: string;
+  admin: AdminUser;
+}
+
+export interface PlatformStats {
+  total_users: number;
+  active_users: number;
+  total_data_sources: number;
+  total_queries: number;
+  total_storage_bytes: number;
+  queries_today: number;
+  new_users_today: number;
+}
+
+export interface UserListItem {
+  id: number;
+  username: string;
+  email: string;
+  full_name: string | null;
+  is_active: boolean;
+  created_at: string;
+  last_login_at: string | null;
+  data_sources_count: number;
+  queries_count: number;
+}
+
+export interface UserListResponse {
+  users: UserListItem[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface UserDetailResponse {
+  id: number;
+  username: string;
+  email: string;
+  full_name: string | null;
+  phone: string | null;
+  is_active: boolean;
+  created_at: string;
+  last_login_at: string | null;
+  data_sources_count: number;
+  queries_count: number;
+  total_storage_bytes: number;
+  recent_queries: Array<{
+    id: number;
+    question: string;
+    status: string;
+    created_at: string;
+  }>;
+}
+
+export interface UserStatusUpdate {
+  is_active: boolean;
+}
+
+export interface ActivityLog {
+  id: number;
+  user_id: number | null;
+  username: string | null;
+  activity_type: string;
+  description: string;
+  ip_address: string | null;
+  created_at: string;
+}
+
+export interface ActivityFeedResponse {
+  activities: ActivityLog[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface SystemHealth {
+  status: string;
+  database: {
+    status: string;
+    response_time_ms: number;
+  };
+  api: {
+    status: string;
+    uptime_seconds: number;
+  };
+  storage: {
+    used_bytes: number;
+    used_mb: number;
+    used_gb: number;
+  };
+}
+
+export interface UserGrowthData {
+  date: string;
+  new_users: number;
+  total_users: number;
+}
+
+export interface UserGrowthResponse {
+  period: string;
+  data: UserGrowthData[];
+  total_new_users: number;
+  growth_rate: number;
+}
+
+export interface UsagePattern {
+  feature: string;
+  usage_count: number;
+  unique_users: number;
+  percentage: number;
+}
+
+export interface UsagePatternsResponse {
+  patterns: UsagePattern[];
+  most_used_feature: string;
+  total_actions: number;
+}
+
+export interface AdminAuthContextType {
+  admin: AdminUser | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  login: (credentials: AdminLogin) => Promise<void>;
+  logout: () => void;
+}
+

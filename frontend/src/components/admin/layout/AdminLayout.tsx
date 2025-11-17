@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
 
 interface AdminLayoutProps {
@@ -9,6 +9,7 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { admin, logout } = useAdminAuth();
 
   const handleLogout = () => {
@@ -16,76 +17,135 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
     navigate('/admin/login');
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Admin Header */}
-      <header className="bg-gray-900 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo & Title */}
-            <div className="flex items-center space-x-4">
-              <div className="h-8 w-8 bg-red-600 rounded flex items-center justify-center">
-                <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-white font-bold text-lg">Lumiere Admin</h1>
-                <p className="text-gray-400 text-xs">Platform Administration</p>
-              </div>
-            </div>
+  const isActive = (path: string) => location.pathname === path;
 
-            {/* Admin Info & Actions */}
-            <div className="flex items-center space-x-4">
-              <div className="hidden md:block text-right">
-                <p className="text-sm font-medium text-white">{admin?.username}</p>
-                <p className="text-xs text-gray-400">Administrator</p>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <a
-                  href="/login"
-                  className="px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  User Portal →
-                </a>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  Logout
-                </button>
-              </div>
+  const navItems = [
+    {
+      name: 'Dashboard',
+      path: '/admin/dashboard',
+      icon: (
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: 'Users',
+      path: '/admin/users',
+      icon: (
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+          />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-gray-900 flex flex-col">
+        {/* Logo */}
+        <div className="p-6 border-b border-gray-800">
+          <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 bg-red-600 rounded-lg flex items-center justify-center">
+              <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-white font-bold text-lg">Lumiere</h1>
+              <p className="text-gray-400 text-xs">Admin Portal</p>
             </div>
           </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Title */}
-        {title && (
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-            <div className="mt-1 h-1 w-20 bg-red-600 rounded"></div>
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-1">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`
+                flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors
+                ${
+                  isActive(item.path)
+                    ? 'bg-red-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                }
+              `}
+            >
+              {item.icon}
+              <span className="font-medium">{item.name}</span>
+            </Link>
+          ))}
+        </nav>
+
+        {/* Admin Info & Logout */}
+        <div className="p-4 border-t border-gray-800 space-y-2">
+          <div className="px-4 py-2">
+            <p className="text-sm font-medium text-white">{admin?.username}</p>
+            <p className="text-xs text-gray-400">Administrator</p>
           </div>
-        )}
+          <a
+            href="/login"
+            className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors text-center"
+          >
+            User Portal →
+          </a>
+          <button
+            onClick={handleLogout}
+            className="w-full px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 px-8 py-6">
+          {title && (
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+              <div className="mt-1 h-1 w-20 bg-red-600 rounded"></div>
+            </div>
+          )}
+        </header>
 
         {/* Page Content */}
-        {children}
-      </main>
+        <main className="flex-1 p-8 overflow-auto">{children}</main>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 border-t border-gray-800 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <p className="text-center text-sm text-gray-400">
+        {/* Footer */}
+        <footer className="bg-white border-t border-gray-200 px-8 py-4">
+          <p className="text-center text-sm text-gray-500">
             © 2024 Lumiere Admin Portal. All rights reserved. | Confidential & Restricted Access
           </p>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 };

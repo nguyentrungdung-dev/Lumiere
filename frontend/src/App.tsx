@@ -16,6 +16,7 @@ import { InsightsPage } from './pages/user/InsightsPage';
 // Admin Pages
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
 
 // Components
 import UserProtectedRoute from './components/auth/UserProtectedRoute';
@@ -46,6 +47,13 @@ function App() {
             <AdminAuthProvider>
               <AdminProtectedRoute>
                 <AdminDashboardPage />
+              </AdminProtectedRoute>
+            </AdminAuthProvider>
+          } />
+          <Route path="/admin/users" element={
+            <AdminAuthProvider>
+              <AdminProtectedRoute>
+                <AdminUsersPage />
               </AdminProtectedRoute>
             </AdminAuthProvider>
           } />

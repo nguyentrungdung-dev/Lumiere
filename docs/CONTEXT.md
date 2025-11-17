@@ -7,15 +7,15 @@ Lumiere is a **B2B SaaS platform** that helps small and medium enterprises (SMEs
 
 ```
 ┌─────────────────────────────────────────────────┐
-│              LUMIERE PLATFORM                    │
+│                LUMIERE PLATFORM                 │
 ├─────────────────────────────────────────────────┤
-│                                                  │
-│  ┌──────────────────┐    ┌──────────────────┐  │
-│  │  ADMIN PORTAL    │    │   USER PORTAL    │  │
-│  │  /admin/*        │    │   /app/*         │  │
-│  │  (Platform Owner)│    │   (Customers)    │  │
-│  └──────────────────┘    └──────────────────┘  │
-│                                                  │
+│                                                 │
+│  ┌──────────────────┐    ┌──────────────────┐   │
+│  │  ADMIN PORTAL    │    │   USER PORTAL    │   │
+│  │  /admin/*        │    │   /app/*         │   │
+│  │  (Platform Owner)│    │   (Customers)    │   │
+│  └──────────────────┘    └──────────────────┘   │
+│                                                 │
 └─────────────────────────────────────────────────┘
 ```
 
