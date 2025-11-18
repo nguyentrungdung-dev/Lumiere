@@ -137,7 +137,7 @@ class AdminService:
         user_items = []
         for user in users:
             # Get user statistics
-            ds_count = db.query(DataSource).filter(DataSource.owner_id == user.id).count()
+            ds_count = db.query(DataSource).filter(DataSource.owner_user_id == user.id).count()
             conv_count = db.query(Conversation).filter(Conversation.user_id == user.id).count()
             
             user_item = UserListItem(
@@ -174,7 +174,7 @@ class AdminService:
             return None
         
         # Get statistics
-        ds_count = db.query(DataSource).filter(DataSource.owner_id == user.id).count()
+        ds_count = db.query(DataSource).filter(DataSource.owner_user_id == user.id).count()
         conv_count = db.query(Conversation).filter(Conversation.user_id == user.id).count()
         queries_count = 0  # TODO: implement when Query model is used
         total_storage = "0 B"  # TODO: implement real calculation
