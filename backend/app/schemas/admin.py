@@ -57,7 +57,7 @@ class UserListItem(BaseModel):
     
     # Statistics
     data_sources_count: Optional[int] = 0
-    conversations_count: Optional[int] = 0
+    queries_count: Optional[int] = 0
     
     class Config:
         from_attributes = True
@@ -89,7 +89,6 @@ class UserDetail(BaseModel):
     
     # Statistics
     data_sources_count: int = 0
-    conversations_count: int = 0
     queries_count: int = 0
     total_storage: str = "0 B"
     

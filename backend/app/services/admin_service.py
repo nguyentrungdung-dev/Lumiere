@@ -137,8 +137,9 @@ class AdminService:
         user_items = []
         for user in users:
             # Get user statistics
+            from app.models.query import Query
             ds_count = db.query(DataSource).filter(DataSource.owner_user_id == user.id).count()
-            conv_count = db.query(Conversation).filter(Conversation.user_id == user.id).count()
+            query_count = db.query(Query).filter(Query.user_id == user.id).count()
             
             user_item = UserListItem(
                 id=user.id,
@@ -151,7 +152,7 @@ class AdminService:
                 created_at=user.created_at,
                 last_login_at=user.last_login_at,
                 data_sources_count=ds_count,
-                conversations_count=conv_count
+                queries_count=query_count
             )
             user_items.append(user_item)
         
@@ -174,9 +175,9 @@ class AdminService:
             return None
         
         # Get statistics
+        from app.models.query import Query
         ds_count = db.query(DataSource).filter(DataSource.owner_user_id == user.id).count()
-        conv_count = db.query(Conversation).filter(Conversation.user_id == user.id).count()
-        queries_count = 0  # TODO: implement when Query model is used
+        queries_count = db.query(Query).filter(Query.user_id == user.id).count()
         total_storage = "0 B"  # TODO: implement real calculation
         
         return UserDetail(
@@ -193,7 +194,6 @@ class AdminService:
             updated_at=user.updated_at,
             last_login_at=user.last_login_at,
             data_sources_count=ds_count,
-            conversations_count=conv_count,
             queries_count=queries_count,
             total_storage=total_storage
         )

@@ -18,8 +18,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUpload, isUploading = 
     if (!file) return;
     
     // Validate file type
-    if (!file.name.endsWith('.csv')) {
-      setError('Please upload a CSV file');
+    const validExtensions = ['.csv', '.xlsx', '.xls'];
+    const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    
+    if (!validExtensions.includes(fileExtension)) {
+      setError('Please upload a CSV or Excel file (.csv, .xlsx, .xls)');
       return;
     }
     
@@ -30,13 +33,16 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUpload, isUploading = 
     }
     
     setSelectedFile(file);
-    setFileName(file.name.replace('.csv', ''));
+    // Remove file extension from name
+    setFileName(file.name.replace(/\.(csv|xlsx|xls)$/i, ''));
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'text/csv': ['.csv'],
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+      'application/vnd.ms-excel': ['.xls'],
     },
     maxFiles: 1,
     disabled: isUploading,
@@ -47,7 +53,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUpload, isUploading = 
     
     setError('');
     try {
-      await onUpload(selectedFile, fileName || selectedFile.name.replace('.csv', ''));
+      const cleanFileName = fileName || selectedFile.name.replace(/\.(csv|xlsx|xls)$/i, '');
+      await onUpload(selectedFile, cleanFileName);
       setSelectedFile(null);
       setFileName('');
     } catch (err: any) {
@@ -81,7 +88,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUpload, isUploading = 
             />
           </svg>
           {isDragActive ? (
-            <p className="text-blue-600 font-medium">Drop the CSV file here...</p>
+            <p className="text-blue-600 font-medium">Drop the file here...</p>
           ) : (
             <>
               <p className="text-gray-600">
@@ -90,7 +97,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUpload, isUploading = 
                 </span>{' '}
                 or drag and drop
               </p>
-              <p className="text-sm text-gray-500">CSV files up to 50MB</p>
+              <p className="text-sm text-gray-500">CSV or Excel files (.csv, .xlsx, .xls) up to 50MB</p>
             </>
           )}
         </div>

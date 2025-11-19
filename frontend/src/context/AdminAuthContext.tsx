@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { adminAuthApi } from '../services/adminApi';
 
 interface AdminUser {
   username: string;
@@ -26,7 +27,7 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
   // Check if admin is authenticated on mount
   useEffect(() => {
     const checkAuth = () => {
-      const adminToken = localStorage.getItem('admin_token');
+      const adminToken = localStorage.getItem('admin_access_token');
       const adminUser = localStorage.getItem('admin_user');
       
       if (adminToken && adminUser) {
@@ -39,28 +40,22 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
   }, []);
 
   const login = async (username: string, password: string) => {
-    // TODO: Replace with actual API call
-    // For now, check against environment variables
-    const adminUsername = import.meta.env.VITE_ADMIN_USERNAME || 'admin';
-    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
-
-    if (username === adminUsername && password === adminPassword) {
+    try {
+      const response = await adminAuthApi.login({ username, password });
       const adminUser: AdminUser = {
-        username,
+        username: response.admin.username,
         role: 'admin',
       };
-      
-      // Store admin session
-      localStorage.setItem('admin_token', 'admin_token_' + Date.now());
       localStorage.setItem('admin_user', JSON.stringify(adminUser));
       setAdmin(adminUser);
-    } else {
-      throw new Error('Invalid admin credentials');
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Invalid admin credentials';
+      throw new Error(message);
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('admin_token');
+    adminAuthApi.logout();
     localStorage.removeItem('admin_user');
     setAdmin(null);
   };

@@ -1,6 +1,6 @@
 """
 Data Service - Business logic for data upload and management.
-Handles CSV parsing, file storage, and data source operations.
+Handles CSV and Excel file parsing, file storage, and data source operations.
 """
 
 import pandas as pd
@@ -25,14 +25,35 @@ from app.core.config import settings
 class DataService:
     """Service for managing data sources and file uploads"""
     
+    # Supported file extensions and their types
+    SUPPORTED_EXTENSIONS = {
+        '.csv': 'csv',
+        '.xlsx': 'excel',
+        '.xls': 'excel'
+    }
+    
     def __init__(self, db: Session):
         self.db = db
-        self.upload_dir = "uploads/csv"  # Can be moved to settings
+        self.upload_dir = "uploads/csv"  # Directory for all data files
         self._ensure_upload_dir()
     
     def _ensure_upload_dir(self):
         """Create upload directory if it doesn't exist"""
         os.makedirs(self.upload_dir, exist_ok=True)
+    
+    def _get_file_extension(self, filename: str) -> str:
+        """Get file extension in lowercase"""
+        return os.path.splitext(filename)[1].lower()
+    
+    def _is_supported_file(self, filename: str) -> tuple[bool, Optional[str]]:
+        """
+        Check if file is supported and return its type.
+        Returns: (is_supported, file_type)
+        """
+        ext = self._get_file_extension(filename)
+        if ext in self.SUPPORTED_EXTENSIONS:
+            return True, self.SUPPORTED_EXTENSIONS[ext]
+        return False, None
     
     async def upload_csv(
         self, 
@@ -41,14 +62,17 @@ class DataService:
         name: Optional[str] = None
     ) -> CSVUploadResponse:
         """
-        Upload and parse CSV file.
+        Upload and parse CSV or Excel file.
         Stores file on disk and creates database record.
+        Supports: .csv, .xlsx, .xls formats
         """
-        # Validate file type
-        if not file.content_type in ['text/csv', 'application/vnd.ms-excel', 'application/csv']:
+        # Validate file extension (more reliable than content_type)
+        is_supported, file_type = self._is_supported_file(file.filename or '')
+        
+        if not is_supported:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid file type. Only CSV files are allowed."
+                detail="Invalid file type. Only CSV (.csv) and Excel (.xlsx, .xls) files are allowed."
             )
         
         # Read file content
@@ -70,8 +94,17 @@ class DataService:
                     detail="File is empty"
                 )
             
-            # Parse CSV with pandas
-            df = pd.read_csv(io.BytesIO(contents))
+            # Parse file based on type
+            if file_type == 'csv':
+                df = pd.read_csv(io.BytesIO(contents))
+            else:  # Excel file
+                try:
+                    df = pd.read_excel(io.BytesIO(contents), engine='openpyxl')
+                except Exception as excel_error:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Failed to parse Excel file: {str(excel_error)}. Make sure openpyxl is installed."
+                    )
             
             if df.empty:
                 raise HTTPException(
@@ -96,14 +129,14 @@ class DataService:
             
             # Create database record
             data_source = DataSource(
-                user_id=user.id,
+                owner_user_id=user.id,
                 name=name or file.filename,
-                source_type="csv",
+                source_type=file_type,  # Store actual file type (csv or excel)
                 connection_string=file_path,  # Store file path
                 row_count=row_count,
                 column_count=column_count,
                 file_size=file_size,
-                config={"columns": columns},
+                config={"columns": columns, "file_extension": self._get_file_extension(file.filename or '')},
                 is_active=True
             )
             
@@ -126,12 +159,12 @@ class DataService:
         except pd.errors.EmptyDataError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="CSV file is empty or invalid"
+                detail="File is empty or invalid"
             )
         except pd.errors.ParserError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Failed to parse CSV file: {str(e)}"
+                detail=f"Failed to parse file: {str(e)}"
             )
         except Exception as e:
             # Clean up file if it was saved
@@ -150,7 +183,7 @@ class DataService:
         source_type: Optional[str] = None
     ) -> DataSourceListResponse:
         """Get all data sources for a user"""
-        query = self.db.query(DataSource).filter(DataSource.user_id == user.id)
+        query = self.db.query(DataSource).filter(DataSource.owner_user_id == user.id)
         
         if source_type:
             query = query.filter(DataSource.source_type == source_type)
@@ -173,7 +206,7 @@ class DataService:
         """Get a specific data source by ID"""
         data_source = self.db.query(DataSource).filter(
             DataSource.id == data_source_id,
-            DataSource.user_id == user.id
+            DataSource.owner_user_id == user.id
         ).first()
         
         if not data_source:
@@ -193,7 +226,7 @@ class DataService:
         """Update a data source"""
         data_source = self.db.query(DataSource).filter(
             DataSource.id == data_source_id,
-            DataSource.user_id == user.id
+            DataSource.owner_user_id == user.id
         ).first()
         
         if not data_source:
@@ -220,7 +253,7 @@ class DataService:
         """Delete a data source and its associated file"""
         data_source = self.db.query(DataSource).filter(
             DataSource.id == data_source_id,
-            DataSource.user_id == user.id
+            DataSource.owner_user_id == user.id
         ).first()
         
         if not data_source:
@@ -229,8 +262,8 @@ class DataService:
                 detail="Data source not found"
             )
         
-        # Delete file from disk if it's a CSV
-        if data_source.source_type == "csv" and data_source.connection_string:
+        # Delete file from disk if it's a CSV or Excel file
+        if data_source.source_type in ["csv", "excel"] and data_source.connection_string:
             file_path = data_source.connection_string
             if os.path.exists(file_path):
                 try:
@@ -254,7 +287,7 @@ class DataService:
         """Preview data from a data source"""
         data_source = self.db.query(DataSource).filter(
             DataSource.id == data_source_id,
-            DataSource.user_id == user.id
+            DataSource.owner_user_id == user.id
         ).first()
         
         if not data_source:
@@ -263,21 +296,21 @@ class DataService:
                 detail="Data source not found"
             )
         
-        if data_source.source_type == "csv":
-            return self._preview_csv(data_source, limit, offset)
+        if data_source.source_type in ["csv", "excel"]:
+            return self._preview_file(data_source, limit, offset)
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Preview not supported for source type: {data_source.source_type}"
             )
     
-    def _preview_csv(
+    def _preview_file(
         self,
         data_source: DataSource,
         limit: int,
         offset: int
     ) -> DataPreviewResponse:
-        """Preview data from a CSV file"""
+        """Preview data from a CSV or Excel file"""
         file_path = data_source.connection_string
         
         if not os.path.exists(file_path):
@@ -287,8 +320,18 @@ class DataService:
             )
         
         try:
-            # Read CSV with pandas
-            df = pd.read_csv(file_path)
+            # Read file based on source type
+            if data_source.source_type == "csv":
+                df = pd.read_csv(file_path)
+            elif data_source.source_type == "excel":
+                # Get file extension from config if available
+                file_ext = data_source.config.get('file_extension', '.xlsx') if data_source.config else '.xlsx'
+                df = pd.read_excel(file_path, engine='openpyxl')
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Unsupported file type: {data_source.source_type}"
+                )
             
             total_rows = len(df)
             columns = df.columns.tolist()

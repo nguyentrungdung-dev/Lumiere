@@ -64,22 +64,21 @@ class DataSourceUpdate(BaseModel):
 class DataSourceResponse(BaseModel):
     """Response schema for data source"""
     id: int
-    user_id: int
+    owner_user_id: int
     name: str
-    description: Optional[str]
-    source_type: str
-    connection_string: Optional[str]
-    config: Optional[Dict[str, Any]]
-    row_count: Optional[int]
-    column_count: Optional[int]
-    file_size: Optional[int]
-    is_active: bool
+    source_type: Optional[str] = None
+    connection_string: Optional[str] = None
+    config: Optional[Dict[str, Any]] = None
+    row_count: Optional[int] = None
+    column_count: Optional[int] = None
+    file_size: Optional[int] = None
+    is_active: bool = True
     created_at: datetime
-    updated_at: Optional[datetime]
-    last_synced_at: Optional[datetime]
+    updated_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 
 class DataSourceListResponse(BaseModel):

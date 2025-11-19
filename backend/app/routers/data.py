@@ -30,15 +30,15 @@ def get_data_service(db: Session = Depends(get_db)) -> DataService:
 
 @router.post("/upload", response_model=CSVUploadResponse, status_code=status.HTTP_201_CREATED)
 async def upload_csv_file(
-    file: UploadFile = File(..., description="CSV file to upload"),
+    file: UploadFile = File(..., description="CSV or Excel file to upload"),
     name: Optional[str] = Query(None, description="Custom name for the data source"),
     current_user: User = Depends(get_current_user),
     service: DataService = Depends(get_data_service)
 ):
     """
-    Upload a CSV file.
+    Upload a CSV or Excel file.
     
-    - **file**: CSV file (max 50MB)
+    - **file**: CSV (.csv) or Excel (.xlsx, .xls) file (max 50MB)
     - **name**: Optional custom name for the data source
     
     Returns:
