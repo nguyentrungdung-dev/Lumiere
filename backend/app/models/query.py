@@ -15,6 +15,7 @@ class Query(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     workspace_id = Column(Integer, ForeignKey("workspaces.id"))
+    question = Column(Text, comment="User question in plain text")
     natural_language = Column(Text, comment="Original NL input")
     generated_sql = Column(Text)
     engine = Column(String, comment="Which agent/model generated SQL")

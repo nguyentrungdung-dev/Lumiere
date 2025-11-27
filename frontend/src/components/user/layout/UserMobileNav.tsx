@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
 import Avatar from '../../common/Avatar';
+import lumiereIcon from '../../../assets/lumiere-icon.svg';
 
 interface MobileNavProps {
   isOpen: boolean;
@@ -103,24 +104,33 @@ const UserMobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+        className={`
+          fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300
+          ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+        `}
         onClick={onClose}
       />
 
       {/* Drawer */}
-      <div className="fixed inset-y-0 left-0 w-64 bg-gray-900 text-white z-50 lg:hidden transform transition-transform duration-300 ease-in-out">
+      <div 
+        className={`
+          fixed inset-y-0 left-0 w-72 bg-white shadow-2xl z-50 lg:hidden 
+          transform transition-transform duration-300 ease-in-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-800">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center font-bold text-lg">
-                L
+          <div className="flex items-center justify-between h-20 px-6 border-b border-gray-50">
+            <div className="flex items-center space-x-3">
+              <div className="p-1.5 bg-primary-50 rounded-lg">
+                <img src={lumiereIcon} alt="Lumiere" className="w-8 h-8" />
               </div>
-              <span className="text-xl font-bold">Lumiere</span>
+              <span className="text-xl font-bold text-gray-900 tracking-tight">Lumiere</span>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-800 focus:outline-none"
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl focus:outline-none transition-colors"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -129,38 +139,45 @@ const UserMobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`
-                  flex items-center justify-between px-4 py-3 rounded-lg transition-colors
-                  ${
-                    isActive(item.path)
-                      ? 'bg-primary-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }
-                `}
-              >
-                <div className="flex items-center space-x-3">
-                  {item.icon}
-                  <span className="font-medium">{item.name}</span>
-                </div>
-                {item.badge && (
-                  <span className="px-2 py-1 text-xs font-semibold bg-red-500 text-white rounded-full">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            ))}
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            {navItems.map((item) => {
+              const active = isActive(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`
+                    flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-200
+                    ${
+                      active
+                        ? 'bg-primary-50 text-primary-700 shadow-sm'
+                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                    }
+                  `}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`${active ? 'text-primary-600' : 'text-gray-400'}`}>
+                      {item.icon}
+                    </div>
+                    <span className={`font-medium ${active ? 'font-semibold' : ''}`}>
+                      {item.name}
+                    </span>
+                  </div>
+                  {item.badge && (
+                    <span className="px-2.5 py-0.5 text-xs font-semibold bg-red-100 text-red-600 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* User Section */}
-          <div className="p-4 border-t border-gray-800">
+          <div className="p-4 border-t border-gray-50 bg-gray-50/50">
             <Link
-              to="/profile"
-              className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+              to="/app/profile"
+              className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-white hover:shadow-sm transition-all"
             >
               <Avatar
                 name={user?.full_name || user?.username || 'User'}
@@ -168,21 +185,21 @@ const UserMobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
                 status="online"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
+                <p className="text-sm font-semibold text-gray-900 truncate">
                   {user?.full_name || user?.username}
                 </p>
-                <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
               </div>
             </Link>
             
             <button
               onClick={logout}
-              className="w-full mt-2 flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-red-600 hover:text-white transition-colors"
+              className="w-full mt-2 flex items-center space-x-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
             >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              <span className="font-medium">Logout</span>
+              <span className="font-medium text-sm">Logout</span>
             </button>
           </div>
         </div>

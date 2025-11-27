@@ -7,6 +7,7 @@ import { registerSchema, type RegisterFormData, calculatePasswordStrength } from
 import Input from '../../components/common/Input';
 import PasswordInput from '../../components/common/PasswordInput';
 import Button from '../../components/common/Button';
+import lumiereLogo from '../../assets/lumiere-logo.svg';
 
 const UserRegisterPage = () => {
   const navigate = useNavigate();
@@ -91,8 +92,8 @@ const UserRegisterPage = () => {
       <div className="max-w-md w-full">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-600 text-white text-2xl font-bold mb-4">
-            L
+          <div className="inline-flex items-center justify-center mb-4">
+            <img src={lumiereLogo} alt="Lumiere" className="h-16" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Join Lumiere</h1>
           <p className="text-gray-600 mt-2">Start analyzing your data with AI</p>

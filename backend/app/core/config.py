@@ -4,6 +4,8 @@ Loads environment variables and provides application settings.
 """
 from pydantic_settings import BaseSettings
 from typing import List
+from openai import OpenAI
+
 
 
 class Settings(BaseSettings):
@@ -23,7 +25,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # OpenAI API
-    OPENAI_API_KEY: str = ""
+    OPENAI_API_KEY: str
     
     # Application
     APP_NAME: str = "Lumiere"

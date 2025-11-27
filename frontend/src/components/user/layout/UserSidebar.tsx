@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
 import { useSidebarStore } from '../../../stores/sidebarStore';
 import Avatar from '../../common/Avatar';
+import lumiereIcon from '../../../assets/lumiere-icon.svg';
 
 interface NavItem {
   name: string;
@@ -67,24 +68,33 @@ const UserSidebar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className={`flex flex-col h-full bg-gray-900 text-white transition-all duration-300 ${userSidebarOpen ? 'w-64' : 'w-20'}`}>
+    <div 
+      className={`
+        flex flex-col h-full bg-white border-r border-gray-100 shadow-soft 
+        transition-all duration-300 ease-in-out
+        ${userSidebarOpen ? 'w-72' : 'w-20'}
+      `}
+    >
       {/* Logo & Toggle */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-gray-800">
+      <div className="flex items-center justify-between h-20 px-6 border-b border-gray-50">
         {userSidebarOpen ? (
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center font-bold text-lg">
-              L
+          <div className="flex items-center space-x-3 animate-fade-in">
+            <div className="p-1.5 bg-primary-100 rounded-lg">
+              <img src={lumiereIcon} alt="Lumiere" className="w-8 h-8" />
             </div>
-            <span className="text-xl font-bold">Lumiere</span>
+            <span className="text-xl font-bold text-gray-900 tracking-tight">Lumiere</span>
           </div>
         ) : (
-          <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center font-bold text-lg mx-auto">
-            L
+          <div className="mx-auto">
+            <img src={lumiereIcon} alt="Lumiere" className="w-8 h-8" />
           </div>
         )}
         <button
           onClick={toggleUserSidebar}
-          className={`p-1 hover:bg-gray-800 rounded transition-colors ${!userSidebarOpen ? 'hidden' : ''}`}
+          className={`
+            p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors
+            ${!userSidebarOpen ? 'hidden' : ''}
+          `}
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
@@ -93,40 +103,53 @@ const UserSidebar: React.FC = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            title={!userSidebarOpen ? item.name : undefined}
-            className={`
-              flex items-center ${userSidebarOpen ? 'justify-between' : 'justify-center'} px-4 py-3 rounded-lg transition-colors
-              ${
-                isActive(item.path)
-                  ? 'bg-primary-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-              }
-            `}
-          >
-            <div className={`flex items-center ${userSidebarOpen ? 'space-x-3' : ''}`}>
-              {item.icon}
-              {userSidebarOpen && <span className="font-medium">{item.name}</span>}
-            </div>
-            {userSidebarOpen && item.badge && (
-              <span className="px-2 py-1 text-xs font-semibold bg-red-500 text-white rounded-full">
-                {item.badge}
-              </span>
-            )}
-          </Link>
-        ))}
+      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        {navItems.map((item) => {
+          const active = isActive(item.path);
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              title={!userSidebarOpen ? item.name : undefined}
+              className={`
+                group flex items-center px-4 py-3.5 rounded-xl transition-all duration-200
+                ${userSidebarOpen ? 'justify-between' : 'justify-center'}
+                ${
+                  active
+                    ? 'bg-primary-50 text-primary-700 shadow-sm'
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }
+              `}
+            >
+              <div className={`flex items-center ${userSidebarOpen ? 'space-x-3' : ''}`}>
+                <div className={`
+                  ${active ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600'}
+                  transition-colors duration-200
+                `}>
+                  {item.icon}
+                </div>
+                {userSidebarOpen && (
+                  <span className={`font-medium ${active ? 'font-semibold' : ''}`}>
+                    {item.name}
+                  </span>
+                )}
+              </div>
+              {userSidebarOpen && item.badge && (
+                <span className="px-2.5 py-0.5 text-xs font-semibold bg-red-100 text-red-600 rounded-full">
+                  {item.badge}
+                </span>
+              )}
+            </Link>
+          );
+        })}
       </nav>
       
       {/* Collapse Button (when sidebar is collapsed) */}
       {!userSidebarOpen && (
-        <div className="px-4 py-4 border-t border-gray-800">
+        <div className="px-4 py-4">
           <button
             onClick={toggleUserSidebar}
-            className="w-full p-2 hover:bg-gray-800 rounded transition-colors"
+            className="w-full p-2 text-gray-400 hover:bg-gray-50 hover:text-gray-600 rounded-xl transition-colors"
             title="Expand sidebar"
           >
             <svg className="h-6 w-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,42 +160,42 @@ const UserSidebar: React.FC = () => {
       )}
 
       {/* User Section */}
-      <div className="p-4 border-t border-gray-800">
+      <div className="p-4 border-t border-gray-50">
         {userSidebarOpen ? (
-          <>
+          <div className="flex flex-col gap-2">
             <Link
               to="/app/profile"
-              className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+              className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors group"
             >
               <Avatar
                 name={user?.full_name || user?.username || 'User'}
                 size="md"
                 status="online"
               />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm font-semibold text-gray-900 group-hover:text-primary-700 transition-colors truncate">
                   {user?.full_name || user?.username}
                 </p>
-                <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
               </div>
             </Link>
             
             <button
               onClick={logout}
-              className="w-full mt-2 flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-red-600 hover:text-white transition-colors"
+              className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
             >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              <span className="font-medium">Logout</span>
+              <span className="font-medium text-sm">Logout</span>
             </button>
-          </>
+          </div>
         ) : (
           <div className="flex flex-col space-y-2">
             <Link
               to="/app/profile"
               title="Profile"
-              className="flex items-center justify-center p-2 rounded-lg hover:bg-gray-800 transition-colors"
+              className="flex items-center justify-center p-2 rounded-xl hover:bg-gray-50 transition-colors"
             >
               <Avatar
                 name={user?.full_name || user?.username || 'User'}
@@ -183,9 +206,9 @@ const UserSidebar: React.FC = () => {
             <button
               onClick={logout}
               title="Logout"
-              className="flex items-center justify-center p-2 rounded-lg text-gray-300 hover:bg-red-600 hover:text-white transition-colors"
+              className="flex items-center justify-center p-2 rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
             >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
             </button>

@@ -29,10 +29,10 @@ const Card: React.FC<CardProps> = ({
     <div
       className={`
         bg-white 
-        rounded-lg 
+        rounded-xl 
         border 
-        border-gray-200 
-        shadow-sm
+        border-gray-100 
+        shadow-soft
         ${paddingClasses[padding]}
         ${hoverClass}
         ${clickableClass}

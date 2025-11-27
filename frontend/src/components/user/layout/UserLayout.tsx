@@ -2,19 +2,26 @@ import React, { useState } from 'react';
 import UserSidebar from './UserSidebar';
 import UserHeader from './UserHeader';
 import UserMobileNav from './UserMobileNav';
+import { useSidebarStore } from '../../../stores/sidebarStore';
 
 interface UserLayoutProps {
   children: React.ReactNode;
   title?: string;
+  fullWidth?: boolean;
 }
 
-const UserLayout: React.FC<UserLayoutProps> = ({ children, title }) => {
+const UserLayout: React.FC<UserLayoutProps> = ({ children, title, fullWidth = false }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { userSidebarOpen } = useSidebarStore();
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:flex-shrink-0 w-64">
+      <aside 
+        className={`hidden lg:flex lg:flex-shrink-0 transition-all duration-300 ease-in-out ${
+          userSidebarOpen ? 'w-72' : 'w-20'
+        }`}
+      >
         <UserSidebar />
       </aside>
 
@@ -25,7 +32,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children, title }) => {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
         <UserHeader
           onMenuClick={() => setIsMobileMenuOpen(true)}
@@ -34,7 +41,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children, title }) => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className={`mx-auto px-4 sm:px-6 lg:px-8 py-8 ${fullWidth ? 'w-full' : 'max-w-7xl'}`}>
             {children}
           </div>
         </main>

@@ -96,7 +96,7 @@ class AnalysisService:
         try:
             chart_config_raw = self.llm_service.generate_chart_config(
                 question=query.question,
-                sql=query.sql_query,
+                sql=query.generated_sql,
                 query_results=query_results
             )
             
@@ -179,7 +179,7 @@ class AnalysisService:
             df = pd.read_csv(data_source.connection_string)
             from pandasql import sqldf
             data = df
-            result_df = sqldf(query.sql_query, locals())
+            result_df = sqldf(query.generated_sql, locals())
             
             # Convert to dict format
             query_results = {
@@ -198,7 +198,7 @@ class AnalysisService:
         try:
             insight_text = self.llm_service.generate_insight(
                 question=query.question,
-                sql=query.sql_query,
+                sql=query.generated_sql,
                 query_results=query_results
             )
             

@@ -30,22 +30,22 @@ const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'
 
 export const ChartRenderer: React.FC<ChartRendererProps> = ({ config, title, description }) => {
   const renderChart = () => {
-    const { type, data } = config;
+    const { type, labels, datasets } = config;
 
     switch (type) {
       case 'bar':
         return (
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={data.labels.map((label: string, idx: number) => ({
+            <BarChart data={labels.map((label: string, idx: number) => ({
               name: label,
-              value: data.datasets[0].data[idx],
+              value: datasets[0].data[idx],
             }))}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="value" fill="#3B82F6" name={data.datasets[0].label} />
+              <Bar dataKey="value" fill="#3B82F6" name={datasets[0].label} />
             </BarChart>
           </ResponsiveContainer>
         );
@@ -53,9 +53,9 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config, title, des
       case 'line':
         return (
           <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={data.labels.map((label: string, idx: number) => ({
+            <LineChart data={labels.map((label: string, idx: number) => ({
               name: label,
-              value: data.datasets[0].data[idx],
+              value: datasets[0].data[idx],
             }))}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
@@ -67,7 +67,7 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config, title, des
                 dataKey="value"
                 stroke="#3B82F6"
                 strokeWidth={2}
-                name={data.datasets[0].label}
+                name={datasets[0].label}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -76,9 +76,9 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config, title, des
       case 'area':
         return (
           <ResponsiveContainer width="100%" height={400}>
-            <AreaChart data={data.labels.map((label: string, idx: number) => ({
+            <AreaChart data={labels.map((label: string, idx: number) => ({
               name: label,
-              value: data.datasets[0].data[idx],
+              value: datasets[0].data[idx],
             }))}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
@@ -91,7 +91,7 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config, title, des
                 stroke="#3B82F6"
                 fill="#3B82F6"
                 fillOpacity={0.6}
-                name={data.datasets[0].label}
+                name={datasets[0].label}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -103,9 +103,9 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config, title, des
           <ResponsiveContainer width="100%" height={400}>
             <PieChart>
               <Pie
-                data={data.labels.map((label: string, idx: number) => ({
+                data={labels.map((label: string, idx: number) => ({
                   name: label,
-                  value: data.datasets[0].data[idx],
+                  value: datasets[0].data[idx],
                 }))}
                 cx="50%"
                 cy="50%"
@@ -116,7 +116,7 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config, title, des
                 fill="#8884d8"
                 dataKey="value"
               >
-                {data.labels.map((_: string, index: number) => (
+                {labels.map((_: string, index: number) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -136,8 +136,8 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config, title, des
               <Tooltip cursor={{ strokeDasharray: '3 3' }} />
               <Legend />
               <Scatter
-                name={data.datasets[0].label}
-                data={data.datasets[0].data}
+                name={datasets[0].label}
+                data={datasets[0].data}
                 fill="#3B82F6"
               />
             </ScatterChart>
@@ -155,10 +155,15 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ config, title, des
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      {title && (
+      {(title || config.title) && (
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{title || config.title}</h3>
           {description && <p className="mt-1 text-sm text-gray-600">{description}</p>}
+          {config.explanation && (
+            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-800">{config.explanation}</p>
+            </div>
+          )}
         </div>
       )}
       <div className="w-full">{renderChart()}</div>

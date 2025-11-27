@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BackButton } from '../../components/common/BackButton';
+import WorkflowNav from '../../components/user/layout/WorkflowNav';
 import { QueryInterface } from '../../components/user/query/QueryInterface';
 import { QueryResults } from '../../components/user/query/QueryResults';
 import { QueryHistory } from '../../components/user/query/QueryHistory';
@@ -56,18 +56,9 @@ export const AIQueryPage: React.FC = () => {
     }
   };
 
-  const handleSelectQuery = (query: AIQuery) => {
-    // Convert AIQuery to AIQueryResponse format for display
-    const response: AIQueryResponse = {
-      query_id: query.id,
-      question: query.question,
-      generated_sql: query.generated_sql || '',
-      result_data: query.result_data,
-      error_message: query.error_message || undefined,
-      execution_time: query.execution_time || undefined,
-      status: query.status,
-    };
-    setCurrentResult(response);
+  const handleSelectQuery = async (query: AIQuery) => {
+    // Rerun the query to get fresh results
+    handleRerunQuery(query.id);
   };
 
   const handleRerunQuery = async (queryId: number) => {
@@ -120,8 +111,7 @@ export const AIQueryPage: React.FC = () => {
 
   return (
     <div className="h-full space-y-4 sm:space-y-6">
-      {/* Back Button */}
-      <BackButton to="/app/dashboard" />
+      <WorkflowNav />
       
       {/* Header */}
       <div>

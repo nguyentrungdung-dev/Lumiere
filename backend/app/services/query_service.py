@@ -56,7 +56,7 @@ class QueryService:
         # Get data source
         data_source = self.db.query(DataSource).filter(
             DataSource.id == query_request.data_source_id,
-            DataSource.user_id == user.id
+            DataSource.owner_user_id == user.id
         ).first()
         
         if not data_source:
@@ -106,7 +106,7 @@ class QueryService:
             user_id=user.id,
             data_source_id=data_source.id,
             question=query_request.question,
-            sql_query=sql_query,
+            generated_sql=sql_query,
             status="pending"
         )
         self.db.add(query_record)
@@ -122,8 +122,8 @@ class QueryService:
             try:
                 result, exec_time = self._execute_sql(df, sql_query)
                 query_record.status = "success"
-                query_record.execution_time = exec_time
-                query_record.result_row_count = result["row_count"]
+                query_record.execution_time_ms = exec_time
+                query_record.executed_rows = result["row_count"]
             except Exception as e:
                 error = str(e)
                 query_status = QueryStatus.ERROR
@@ -242,11 +242,11 @@ class QueryService:
                 data_source_id=q.data_source_id,
                 data_source_name=data_source.name if data_source else "Unknown",
                 question=q.question,
-                sql=q.sql_query,
+                sql=q.generated_sql,
                 status=QueryStatus(q.status),
-                row_count=q.result_row_count,
+                row_count=q.executed_rows,
                 created_at=q.created_at,
-                execution_time_ms=q.execution_time
+                execution_time_ms=q.execution_time_ms
             ))
         
         return QueryHistoryResponse(
@@ -279,7 +279,7 @@ class QueryService:
         
         # If query has results stored, retrieve them
         result = None
-        if query.status == "success" and query.result_row_count:
+        if query.status == "success" and query.executed_rows:
             # For now, we don't store full results in DB
             # In production, you might want to cache results in Redis or similar
             result = None
@@ -290,13 +290,13 @@ class QueryService:
             data_source_name=data_source.name if data_source else "Unknown",
             user_id=query.user_id,
             question=query.question,
-            sql=query.sql_query,
+            sql=query.generated_sql,
             explanation=None,  # Could be stored in DB if needed
             status=QueryStatus(query.status),
             result=result,
             error=query.error_message,
             created_at=query.created_at,
-            execution_time_ms=query.execution_time
+            execution_time_ms=query.execution_time_ms
         )
     
     async def rerun_query(

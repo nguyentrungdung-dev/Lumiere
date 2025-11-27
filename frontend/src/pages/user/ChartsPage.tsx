@@ -1,48 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BackButton } from '../../components/common/BackButton';
+import WorkflowNav from '../../components/user/layout/WorkflowNav';
 import { ChartRenderer } from '../../components/user/charts/ChartRenderer';
-import type { ChartGenerationResponse } from '../../types';
+import { ChartBuilder } from '../../components/user/charts/ChartBuilder';
+import { dataSourceApi } from '../../services/dataApi';
+import type { ChartGenerationResponse, ChartConfig, DataSource } from '../../types';
 
 export const ChartsPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [chartData, setChartData] = useState<ChartGenerationResponse | null>(
+  const [chartData] = useState<ChartGenerationResponse | null>(
     location.state?.chartData || null
   );
+  
+  // For chart builder
+  const [showBuilder, setShowBuilder] = useState(!chartData);
+  const [dataSources, setDataSources] = useState<DataSource[]>([]);
+  const [createdChart, setCreatedChart] = useState<ChartConfig | null>(null);
+
+  useEffect(() => {
+    if (!chartData) {
+      loadDataSources();
+    }
+  }, [chartData]);
+
+  const loadDataSources = async () => {
+    try {
+      const response = await dataSourceApi.getDataSources(0, 100);
+      setDataSources(response.data_sources.filter((ds) => ds.is_active));
+    } catch (err: any) {
+      console.error('Failed to load data sources:', err);
+    }
+  };
+
+  const handleCreateChart = (config: ChartConfig) => {
+    setCreatedChart(config);
+    setShowBuilder(false);
+  };
 
   const downloadChart = () => {
     // In a real implementation, this would use html2canvas or similar to export the chart
     alert('Chart export feature coming soon!');
   };
 
+  // Determine which chart to display
+  const displayChart = chartData?.config || createdChart;
+
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Back Button */}
-      <BackButton to="/app/query" />
+      <WorkflowNav />
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Data Visualizations</h1>
           <p className="mt-1 text-sm text-gray-600">
-            AI-generated charts from your query results
+            {showBuilder ? 'Create custom charts from your data' : 'Your generated chart'}
           </p>
         </div>
-        {chartData && (
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          {!showBuilder && (
+            <button
+              onClick={() => {
+                setShowBuilder(true);
+                setCreatedChart(null);
+              }}
+              className="px-4 py-2 text-blue-600 bg-white border-2 border-blue-600 rounded-md hover:bg-blue-50 transition-colors font-medium whitespace-nowrap"
+            >
+              ➕ Create New Chart
+            </button>
+          )}
+          {displayChart && (
             <button
               onClick={downloadChart}
               className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
             >
               📥 Export Chart
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Empty State */}
-      {!chartData ? (
+      {/* Chart Builder or Display */}
+      {showBuilder ? (
+        <ChartBuilder
+          dataSources={dataSources}
+          onCreateChart={handleCreateChart}
+        />
+      ) : !displayChart ? (
         <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
           <svg
             className="mx-auto h-12 w-12 text-gray-400"
@@ -59,12 +104,18 @@ export const ChartsPage: React.FC = () => {
           </svg>
           <h3 className="mt-2 text-sm font-medium text-gray-900">No chart to display</h3>
           <p className="mt-1 text-sm text-gray-500">
-            Execute a query and generate a chart to see visualizations here.
+            Create a new chart or generate one from an AI query.
           </p>
-          <div className="mt-6">
+          <div className="mt-6 flex gap-3 justify-center">
+            <button
+              onClick={() => setShowBuilder(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            >
+              Create Chart →
+            </button>
             <button
               onClick={() => navigate('/app/query')}
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
             >
               Go to AI Query →
             </button>
@@ -72,36 +123,10 @@ export const ChartsPage: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* AI Reasoning */}
-          {chartData.reasoning && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start">
-                <svg
-                  className="h-5 w-5 text-blue-600 mt-0.5 mr-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <div>
-                  <p className="text-sm font-medium text-blue-900">AI Reasoning</p>
-                  <p className="mt-1 text-sm text-blue-800">{chartData.reasoning}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Chart Display */}
           <ChartRenderer
-            config={chartData.chart_config}
-            title={`${chartData.chart_type.charAt(0).toUpperCase() + chartData.chart_type.slice(1)} Chart`}
-            description="AI-generated visualization based on your query results"
+            config={displayChart}
+            description={chartData ? "AI-generated visualization based on your query results" : "Your custom chart"}
           />
 
           {/* Chart Info */}
@@ -111,20 +136,37 @@ export const ChartsPage: React.FC = () => {
               <div>
                 <span className="text-gray-500">Chart Type:</span>
                 <span className="ml-2 font-medium text-gray-900 capitalize">
-                  {chartData.chart_type}
+                  {displayChart.type}
                 </span>
               </div>
               <div>
                 <span className="text-gray-500">Data Points:</span>
                 <span className="ml-2 font-medium text-gray-900">
-                  {chartData.chart_config.data.labels?.length || 'N/A'}
+                  {displayChart.labels?.length || 'N/A'}
                 </span>
               </div>
+              {chartData && (
+                <>
+                  <div>
+                    <span className="text-gray-500">Query ID:</span>
+                    <span className="ml-2 font-medium text-gray-900">
+                      #{chartData.query_id}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Generated:</span>
+                    <span className="ml-2 font-medium text-gray-900">
+                      {new Date(chartData.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="mt-4 pt-4 border-t border-gray-200">
               <p className="text-sm text-gray-600">
-                💡 <strong>Tip:</strong> Different chart types work better for different data. The AI selected this chart type based on your data structure and query results.
+                💡 <strong>Tip:</strong> Different chart types work better for different data. 
+                {chartData ? ' The AI selected this chart type based on your data structure and query results.' : ' You can create a new chart with different settings anytime.'}
               </p>
             </div>
           </div>
@@ -132,7 +174,19 @@ export const ChartsPage: React.FC = () => {
           {/* Action Buttons */}
           <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">What's Next?</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button
+                onClick={() => {
+                  setShowBuilder(true);
+                  setCreatedChart(null);
+                }}
+                className="flex items-center justify-center px-4 py-3 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                <svg className="h-5 w-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span className="font-medium">Create New Chart</span>
+              </button>
               <button
                 onClick={() => navigate('/app/query')}
                 className="flex items-center justify-center px-4 py-3 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
@@ -145,7 +199,7 @@ export const ChartsPage: React.FC = () => {
                     d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span className="font-medium">Run Another Query</span>
+                <span className="font-medium">Run AI Query</span>
               </button>
               <button
                 onClick={() => navigate('/app/insights', { state: { fromChart: true } })}

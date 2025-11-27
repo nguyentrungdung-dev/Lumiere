@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BackButton } from '../../components/common/BackButton';
+import WorkflowNav from '../../components/user/layout/WorkflowNav';
 import { FileUpload } from '../../components/user/data/FileUpload';
 import { DataSourceCard } from '../../components/user/data/DataSourceCard';
 import { DataPreviewModal } from '../../components/user/data/DataPreviewModal';
@@ -86,22 +86,24 @@ export const DataSourcesPage: React.FC = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Back Button */}
-      <BackButton to="/app/dashboard" />
+      <WorkflowNav />
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-xl border border-gray-100 shadow-soft">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Data Sources</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Upload and manage your CSV data files
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Data Sources</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Manage your datasets. Supported formats: CSV, Excel.
           </p>
         </div>
         <button
           onClick={() => setShowUpload(!showUpload)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
+          className="flex items-center justify-center px-5 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-all shadow-lg shadow-primary-600/20 font-medium active:scale-95"
         >
-          {showUpload ? 'Cancel Upload' : '+ Upload Data'}
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          {showUpload ? 'Cancel Upload' : 'Upload Data'}
         </button>
       </div>
 

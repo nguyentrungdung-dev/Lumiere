@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../common/Card';
 
 interface QuickAction {
@@ -6,73 +7,84 @@ interface QuickAction {
   description: string;
   icon: React.ReactNode;
   color: string;
-  onClick: () => void;
+  path: string;
 }
 
 const QuickActions: React.FC = () => {
+  const navigate = useNavigate();
+
   const actions: QuickAction[] = [
     {
-      title: 'Upload CSV',
-      description: 'Import data from CSV file',
+      title: 'Upload Data',
+      description: 'Import CSV or Excel files',
       icon: (
-        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
         </svg>
       ),
-      color: 'text-blue-600',
-      onClick: () => console.log('Upload CSV'),
+      color: 'text-blue-600 bg-blue-100',
+      path: '/app/data',
     },
     {
-      title: 'New Conversation',
-      description: 'Start AI chat analysis',
+      title: 'Ask Question',
+      description: 'Query data with AI',
       icon: (
-        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      color: 'text-green-600',
-      onClick: () => console.log('New Conversation'),
+      color: 'text-violet-600 bg-violet-100',
+      path: '/app/query',
     },
     {
-      title: 'Create Agent',
-      description: 'Build custom AI agent',
+      title: 'Create Chart',
+      description: 'Visualize your data',
       icon: (
-        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
       ),
-      color: 'text-purple-600',
-      onClick: () => console.log('Create Agent'),
+      color: 'text-emerald-600 bg-emerald-100',
+      path: '/app/charts',
     },
     {
-      title: 'View Insights',
-      description: 'Browse generated insights',
+      title: 'Get Insights',
+      description: 'AI-powered analysis',
       icon: (
-        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
       ),
-      color: 'text-orange-600',
-      onClick: () => console.log('View Insights'),
+      color: 'text-amber-600 bg-amber-100',
+      path: '/app/insights',
     },
   ];
 
   return (
-    <Card>
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+    <Card className="h-full">
+      <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+        <svg className="w-5 h-5 mr-2 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        Quick Actions
+      </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {actions.map((action, index) => (
           <button
             key={index}
-            onClick={action.onClick}
-            className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors text-left"
+            onClick={() => navigate(action.path)}
+            className="group flex items-start space-x-4 p-4 border border-gray-100 rounded-xl hover:border-primary-200 hover:shadow-soft hover:bg-primary-50/50 transition-all duration-200 text-left bg-gray-50/30"
           >
-            <div className={action.color}>
+            <div className={`p-3 rounded-lg ${action.color} group-hover:scale-110 transition-transform duration-200`}>
               {action.icon}
             </div>
-            <div className="flex-1">
-              <h3 className="font-medium text-gray-900">{action.title}</h3>
-              <p className="text-sm text-gray-600 mt-1">{action.description}</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">
+                {action.title}
+              </h3>
+              <p className="text-sm text-gray-500 mt-1 line-clamp-1 group-hover:text-gray-600">
+                {action.description}
+              </p>
             </div>
           </button>
         ))}

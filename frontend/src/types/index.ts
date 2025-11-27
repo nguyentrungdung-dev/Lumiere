@@ -130,12 +130,19 @@ export interface AIQueryRequest {
 
 export interface AIQueryResponse {
   query_id: number;
+  data_source_id: number;
   question: string;
-  generated_sql: string;
-  result_data?: any;
-  error_message?: string;
-  execution_time?: number;
+  sql: string;
+  explanation: string;
   status: string;
+  result?: {
+    columns: string[];
+    rows: any[];
+    row_count: number;
+    execution_time_ms: number;
+  };
+  error?: string;
+  created_at: string;
 }
 
 export interface QueryHistoryResponse {
@@ -148,8 +155,15 @@ export interface QueryHistoryResponse {
 // Chart Types
 export interface ChartConfig {
   type: 'bar' | 'line' | 'pie' | 'scatter' | 'doughnut' | 'area';
-  data: any;
-  options?: any;
+  title: string;
+  labels: string[];
+  datasets: {
+    label: string;
+    data: number[];
+    backgroundColor?: string | string[];
+    borderColor?: string | string[];
+  }[];
+  explanation?: string;
 }
 
 export interface ChartGenerationRequest {
@@ -157,9 +171,9 @@ export interface ChartGenerationRequest {
 }
 
 export interface ChartGenerationResponse {
-  chart_type: string;
-  chart_config: ChartConfig;
-  reasoning: string;
+  query_id: number;
+  config: ChartConfig;
+  created_at: string;
 }
 
 // Insight Types
@@ -169,9 +183,9 @@ export interface InsightGenerationRequest {
 
 export interface InsightGenerationResponse {
   query_id: number;
-  insights: string;
-  key_findings: string[];
-  recommendations: string[];
+  insight_text: string;
+  key_findings?: string[];
+  created_at: string;
 }
 
 // Admin Types

@@ -3,6 +3,9 @@ import { UserAuthProvider } from './context/UserAuthContext';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+// Landing Page
+import LandingPage from './pages/LandingPage';
+
 // User Pages
 import UserLoginPage from './pages/user/UserLoginPage';
 import UserRegisterPage from './pages/user/UserRegisterPage';
@@ -130,9 +133,11 @@ function App() {
             </UserAuthProvider>
           } />
 
-          {/* Default redirects */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          {/* Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* Fallback redirects */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </QueryClientProvider>

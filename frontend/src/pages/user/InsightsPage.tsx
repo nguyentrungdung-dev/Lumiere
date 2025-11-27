@@ -1,247 +1,194 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { BackButton } from '../../components/common/BackButton';
-import type { InsightGenerationResponse } from '../../types';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { ChatInterface } from '../../components/user/insights/ChatInterface';
+import { ChatSidebar } from '../../components/user/insights/ChatSidebar';
+import { aiQueryApi, dataSourceApi } from '../../services/dataApi';
+import type { AIQuery, DataSource } from '../../types';
+
+// Helper to format messages
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string | React.ReactNode;
+  timestamp: Date;
+  isError?: boolean;
+}
 
 export const InsightsPage: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [insightData, setInsightData] = useState<InsightGenerationResponse | null>(
-    location.state?.insightData || null
-  );
+  
+  // State
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [history, setHistory] = useState<AIQuery[]>([]);
+  const [dataSources, setDataSources] = useState<DataSource[]>([]);
+  const [selectedDataSource, setSelectedDataSource] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedQueryId, setSelectedQueryId] = useState<number | null>(null);
 
-  const copyInsights = () => {
-    if (!insightData) return;
-    
-    const text = `
-Insights for Query #${insightData.query_id}
+  // Load history and data sources on mount
+  useEffect(() => {
+    loadHistory();
+    loadDataSources();
+  }, []);
 
-${insightData.insights}
+  // Check for passed state (from Chart or Query page)
+  useEffect(() => {
+    const state = location.state as { insightData?: any; fromChart?: boolean };
+    if (state?.insightData) {
+      // If we have insight data passed, add it as a message
+      const insight = state.insightData;
+      setMessages([
+        {
+          id: `sys-${Date.now()}`,
+          role: 'assistant',
+          content: `Here are the insights for your query:\n\n${insight.insight_text}`,
+          timestamp: new Date(),
+        }
+      ]);
+    }
+  }, [location.state]);
 
-Key Findings:
-${insightData.key_findings.map((finding, idx) => `${idx + 1}. ${finding}`).join('\n')}
+  const loadHistory = async () => {
+    try {
+      const response = await aiQueryApi.getQueryHistory(0, 50);
+      setHistory(response.queries);
+    } catch (err) {
+      console.error('Failed to load history', err);
+    }
+  };
 
-Recommendations:
-${insightData.recommendations.map((rec, idx) => `${idx + 1}. ${rec}`).join('\n')}
-    `.trim();
-    
-    navigator.clipboard.writeText(text);
-    alert('Insights copied to clipboard!');
+  const loadDataSources = async () => {
+    try {
+      const response = await dataSourceApi.getDataSources();
+      setDataSources(response.data_sources.filter(ds => ds.is_active));
+      if (response.data_sources.length > 0) {
+        setSelectedDataSource(response.data_sources[0].id);
+      }
+    } catch (err) {
+      console.error('Failed to load data sources', err);
+    }
+  };
+
+  const handleSendMessage = async (text: string) => {
+    if (!selectedDataSource) {
+      setMessages(prev => [...prev, {
+        id: `err-${Date.now()}`,
+        role: 'assistant',
+        content: "Please select a data source first.",
+        timestamp: new Date(),
+        isError: true
+      }]);
+      return;
+    }
+
+    // Add user message
+    const userMsg: Message = {
+      id: `usr-${Date.now()}`,
+      role: 'user',
+      content: text,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, userMsg]);
+    setIsLoading(true);
+
+    try {
+      // Call API
+      const response = await aiQueryApi.executeQuery({
+        data_source_id: selectedDataSource,
+        question: text,
+        execute: true
+      });
+
+      // Add assistant message
+      const aiMsg: Message = {
+        id: `ai-${Date.now()}`,
+        role: 'assistant',
+        content: `Here is the SQL I generated:\n\`\`\`sql\n${response.sql}\n\`\`\`\n\n${response.explanation}\n\n${response.result?.rows ? `Found ${response.result.row_count} results.` : ''}`,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, aiMsg]);
+      
+      // Refresh history
+      loadHistory();
+    } catch (err: any) {
+      const errorMsg: Message = {
+        id: `err-${Date.now()}`,
+        role: 'assistant',
+        content: `Error: ${err.response?.data?.detail || 'Failed to process query'}`,
+        timestamp: new Date(),
+        isError: true
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSelectQuery = (query: AIQuery) => {
+    setSelectedQueryId(query.id);
+    // Load this query into the chat view (simulated for now since we don't have full chat persistence)
+    setMessages([
+      {
+        id: `q-${query.id}`,
+        role: 'user',
+        content: query.question,
+        timestamp: new Date(query.created_at),
+      },
+      {
+        id: `a-${query.id}`,
+        role: 'assistant',
+        content: `SQL: ${query.generated_sql}\n\n(Tap "New Analysis" to start a fresh query)`,
+        timestamp: new Date(query.created_at),
+      }
+    ]);
+  };
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setSelectedQueryId(null);
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Back Button */}
-      <BackButton to="/app/query" />
-      
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">AI Insights</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Business insights and recommendations powered by AI
-          </p>
-        </div>
-        {insightData && (
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <button
-              onClick={copyInsights}
-              className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
-            >
-              📋 Copy Insights
-            </button>
-          </div>
-        )}
-      </div>
+    <div className="flex h-[calc(100vh-7rem)] bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      {/* Sidebar */}
+      <ChatSidebar 
+        history={history} 
+        onSelectQuery={handleSelectQuery} 
+        onNewChat={handleNewChat}
+        selectedQueryId={selectedQueryId}
+      />
 
-      {/* Empty State */}
-      {!insightData ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header with Data Source Selector */}
+          <div className="h-16 border-b border-gray-100 flex items-center justify-between px-6 bg-white">
+            <h2 className="font-bold text-gray-900">AI Assistant</h2>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500">Data Source:</span>
+              <select
+                value={selectedDataSource || ''}
+                onChange={(e) => setSelectedDataSource(Number(e.target.value))}
+                className="text-sm border-none bg-gray-50 rounded-lg py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-primary-500"
+              >
+                {dataSources.length === 0 && <option value="">No data sources</option>}
+                {dataSources.map(ds => (
+                  <option key={ds.id} value={ds.id}>{ds.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Chat Interface */}
+          <div className="flex-1 p-4 bg-gray-50">
+            <ChatInterface 
+              messages={messages} 
+              isLoading={isLoading} 
+              onSendMessage={handleSendMessage}
             />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No insights to display</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Execute a query and generate insights to see AI-powered analysis here.
-          </p>
-          <div className="mt-6">
-            <button
-              onClick={() => navigate('/app/query')}
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-            >
-              Go to AI Query →
-            </button>
           </div>
         </div>
-      ) : (
-        <>
-          {/* Main Insights */}
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 p-6">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-8 w-8 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  />
-                </svg>
-              </div>
-              <div className="ml-4 flex-1">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">AI Analysis</h2>
-                <div className="prose prose-sm text-gray-700 whitespace-pre-line">
-                  {insightData.insights}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Key Findings */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center mb-4">
-              <svg
-                className="h-6 w-6 text-blue-600 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                />
-              </svg>
-              <h3 className="text-lg font-semibold text-gray-900">Key Findings</h3>
-            </div>
-            <ul className="space-y-3">
-              {insightData.key_findings.map((finding, idx) => (
-                <li key={idx} className="flex items-start">
-                  <span className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 text-sm font-medium mr-3">
-                    {idx + 1}
-                  </span>
-                  <span className="text-gray-700 pt-0.5">{finding}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Recommendations */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center mb-4">
-              <svg
-                className="h-6 w-6 text-purple-600 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-              <h3 className="text-lg font-semibold text-gray-900">Recommendations</h3>
-            </div>
-            <div className="space-y-4">
-              {insightData.recommendations.map((recommendation, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 bg-purple-50 border border-purple-200 rounded-lg"
-                >
-                  <div className="flex items-start">
-                    <span className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-purple-600 text-white text-xs font-bold mr-3 mt-0.5">
-                      {idx + 1}
-                    </span>
-                    <p className="text-gray-800">{recommendation}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Related Query Info */}
-          <div className="bg-gray-50 rounded-lg border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Related Query</h3>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Query ID: #{insightData.query_id}</span>
-              <button
-                onClick={() => navigate('/app/query')}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-              >
-                View Query Details →
-              </button>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">What's Next?</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button
-                onClick={() => navigate('/app/query')}
-                className="flex items-center justify-center px-4 py-3 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                <svg className="h-5 w-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="font-medium">New Query</span>
-              </button>
-              <button
-                onClick={() => navigate('/app/charts', { state: { fromInsights: true } })}
-                className="flex items-center justify-center px-4 py-3 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                <svg className="h-5 w-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-                <span className="font-medium">View Charts</span>
-              </button>
-              <button
-                onClick={() => navigate('/app/dashboard')}
-                className="flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                  />
-                </svg>
-                <span className="font-medium">Dashboard</span>
-              </button>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 };
+
 

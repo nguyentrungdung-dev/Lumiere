@@ -1,0 +1,8 @@
+<svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Blue "L" Icon -->
+  <path d="M8 4C8 2.89543 8.89543 2 10 2H18C19.1046 2 20 2.89543 20 4V30C20 31.1046 19.1046 32 18 32H26C27.1046 32 28 32.8954 28 34V36C28 37.1046 27.1046 38 26 38H10C8.89543 38 8 37.1046 8 36V4Z" fill="#3B82F6"/>
+  
+  <!-- Lumiere Text -->
+  <text x="38" y="28" font-family="Arial, sans-serif" font-size="24" font-weight="600" fill="#F4E5B7">Lumiere</text>
+</svg>
+
