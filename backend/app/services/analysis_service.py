@@ -77,7 +77,7 @@ class AnalysisService:
             df = pd.read_csv(data_source.connection_string)
             from pandasql import sqldf
             data = df
-            result_df = sqldf(query.sql_query, locals())
+            result_df = sqldf(query.generated_sql, locals())
             
             # Convert to dict format
             query_results = {

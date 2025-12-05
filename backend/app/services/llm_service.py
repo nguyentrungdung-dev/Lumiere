@@ -105,13 +105,37 @@ IMPORTANT RULES:
 6. For filtering, use WHERE clause
 7. Keep queries simple and efficient
 
+SQL FORMATTING REQUIREMENTS (VERY IMPORTANT):
+- Format the SQL query with proper indentation and line breaks for readability
+- Each main clause (SELECT, FROM, WHERE, GROUP BY, ORDER BY, LIMIT) should start on a new line
+- Use consistent indentation (2 spaces) for column lists and conditions
+- For multiple columns, put each on a separate line
+- Add meaningful whitespace for clarity
+
+Example of WELL-FORMATTED SQL:
+```
+SELECT
+  column1,
+  column2,
+  SUM(column3) AS total
+FROM data
+WHERE condition = 'value'
+GROUP BY
+  column1,
+  column2
+ORDER BY total DESC
+LIMIT 10
+```
+
 Return your response in JSON format:
 {{
-  "sql": "SELECT ... FROM data ...",
-  "explanation": "Brief explanation of what the query does",
+  "sql": "SELECT\\n  column1,\\n  column2\\nFROM data\\nWHERE ...\\nORDER BY ...",
+  "explanation": "Detailed explanation of what the query does, including: 1) Which columns are selected, 2) Any filtering conditions applied, 3) Aggregations performed, 4) How results are sorted",
   "confidence": 0.9
 }}
 
+The SQL should use \\n for newlines and proper indentation.
+The explanation should be detailed and easy to understand for non-technical users.
 The confidence should be between 0.0 and 1.0 based on how certain you are that the query correctly answers the question.
 """
         return prompt

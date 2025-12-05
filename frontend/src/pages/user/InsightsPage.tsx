@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ChatInterface } from '../../components/user/insights/ChatInterface';
 import { ChatSidebar } from '../../components/user/insights/ChatSidebar';
-import { aiQueryApi, dataSourceApi } from '../../services/dataApi';
-import type { AIQuery, DataSource } from '../../types';
+import { aiQueryApi, dataSourceApi, insightApi } from '../../services/dataApi';
+import type { AIQuery, DataSource, AIQueryResponse } from '../../types';
 
 // Helper to format messages
 interface Message {
@@ -12,6 +12,7 @@ interface Message {
   content: string | React.ReactNode;
   timestamp: Date;
   isError?: boolean;
+  queryResult?: AIQueryResponse;
 }
 
 export const InsightsPage: React.FC = () => {
@@ -69,12 +70,54 @@ export const InsightsPage: React.FC = () => {
     }
   };
 
+  const formatResultsTable = (result: AIQueryResponse['result']) => {
+    if (!result || !result.rows || result.rows.length === 0) {
+      return null;
+    }
+
+    const columns = result.columns;
+    const rows = result.rows.slice(0, 10); // Show max 10 rows
+    const hasMore = result.rows.length > 10;
+
+    return (
+      <div className="mt-4 overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <thead className="bg-gray-50">
+            <tr>
+              {columns.map((col, idx) => (
+                <th key={idx} className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  {col}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {rows.map((row: any, rowIdx: number) => (
+              <tr key={rowIdx}>
+                {columns.map((col, colIdx) => (
+                  <td key={colIdx} className="px-3 py-2 whitespace-nowrap text-gray-900">
+                    {row[col] !== null && row[col] !== undefined ? String(row[col]) : '-'}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {hasMore && (
+          <p className="mt-2 text-xs text-gray-500 italic">
+            Showing first 10 of {result.row_count} results
+          </p>
+        )}
+      </div>
+    );
+  };
+
   const handleSendMessage = async (text: string) => {
     if (!selectedDataSource) {
       setMessages(prev => [...prev, {
         id: `err-${Date.now()}`,
         role: 'assistant',
-        content: "Please select a data source first.",
+        content: "Please select a data source first to start analyzing your data.",
         timestamp: new Date(),
         isError: true
       }]);
@@ -92,29 +135,115 @@ export const InsightsPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Call API
+      // Call API to execute query
       const response = await aiQueryApi.executeQuery({
         data_source_id: selectedDataSource,
         question: text,
         execute: true
       });
 
-      // Add assistant message
+      // Format the SQL nicely
+      const formattedSQL = response.sql;
+
+      // Build rich response content
+      const responseContent = (
+        <div className="space-y-4">
+          {/* Explanation */}
+          <div>
+            <h4 className="font-semibold text-gray-800 mb-1">📊 Analysis</h4>
+            <p className="text-gray-700">{response.explanation}</p>
+          </div>
+
+          {/* SQL Query */}
+          <div>
+            <h4 className="font-semibold text-gray-800 mb-1">🔍 Generated SQL</h4>
+            <pre className="bg-slate-900 text-gray-100 p-3 rounded-lg overflow-x-auto text-xs font-mono whitespace-pre-wrap">
+              {formattedSQL}
+            </pre>
+          </div>
+
+          {/* Results */}
+          {response.result && response.result.rows && response.result.rows.length > 0 ? (
+            <div>
+              <h4 className="font-semibold text-gray-800 mb-1">
+                📋 Results ({response.result.row_count} rows, {response.result.execution_time_ms?.toFixed(2)}ms)
+              </h4>
+              {formatResultsTable(response.result)}
+            </div>
+          ) : (
+            <div className="text-gray-600 italic">No results returned from query.</div>
+          )}
+
+          {/* Quick insights based on results */}
+          {response.result && response.result.rows && response.result.rows.length > 0 && (
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+              <h4 className="font-semibold text-blue-800 mb-1">💡 Quick Insight</h4>
+              <p className="text-blue-700 text-sm">
+                Found <strong>{response.result.row_count}</strong> records matching your query.
+                {response.result.columns.length > 0 && (
+                  <> The data includes columns: <em>{response.result.columns.slice(0, 3).join(', ')}</em>
+                  {response.result.columns.length > 3 && ` and ${response.result.columns.length - 3} more`}.</>
+                )}
+              </p>
+            </div>
+          )}
+        </div>
+      );
+
+      // Add assistant message with rich content
       const aiMsg: Message = {
         id: `ai-${Date.now()}`,
         role: 'assistant',
-        content: `Here is the SQL I generated:\n\`\`\`sql\n${response.sql}\n\`\`\`\n\n${response.explanation}\n\n${response.result?.rows ? `Found ${response.result.row_count} results.` : ''}`,
+        content: responseContent,
         timestamp: new Date(),
+        queryResult: response,
       };
       setMessages(prev => [...prev, aiMsg]);
       
       // Refresh history
       loadHistory();
+
+      // Generate additional insights if we have results
+      if (response.result && response.result.rows && response.result.rows.length > 0) {
+        try {
+          const insightResponse = await insightApi.generateInsight({ query_id: response.query_id });
+          
+          // Add insight as a follow-up message
+          const insightMsg: Message = {
+            id: `insight-${Date.now()}`,
+            role: 'assistant',
+            content: (
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
+                <h4 className="font-semibold text-amber-800 mb-2 flex items-center">
+                  <span className="mr-2">🧠</span> AI-Generated Insights
+                </h4>
+                <div className="text-amber-900 text-sm whitespace-pre-wrap leading-relaxed">
+                  {insightResponse.insight_text}
+                </div>
+              </div>
+            ),
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, insightMsg]);
+        } catch (insightErr) {
+          console.log('Could not generate additional insights:', insightErr);
+          // Silent fail - insights are optional
+        }
+      }
+
     } catch (err: any) {
       const errorMsg: Message = {
         id: `err-${Date.now()}`,
         role: 'assistant',
-        content: `Error: ${err.response?.data?.detail || 'Failed to process query'}`,
+        content: (
+          <div className="space-y-2">
+            <p className="font-semibold text-red-700">❌ Error processing your query</p>
+            <p className="text-red-600">{err.response?.data?.detail || 'Failed to process query. Please try rephrasing your question.'}</p>
+            <p className="text-sm text-red-500 mt-2">
+              💡 Tip: Try asking specific questions like "What is the total sales?" or "Show me the top 10 products by revenue"
+            </p>
+          </div>
+        ),
         timestamp: new Date(),
         isError: true
       };
@@ -124,23 +253,80 @@ export const InsightsPage: React.FC = () => {
     }
   };
 
-  const handleSelectQuery = (query: AIQuery) => {
+  const handleSelectQuery = async (query: AIQuery) => {
     setSelectedQueryId(query.id);
-    // Load this query into the chat view (simulated for now since we don't have full chat persistence)
-    setMessages([
-      {
-        id: `q-${query.id}`,
-        role: 'user',
-        content: query.question,
-        timestamp: new Date(query.created_at),
-      },
-      {
-        id: `a-${query.id}`,
-        role: 'assistant',
-        content: `SQL: ${query.generated_sql}\n\n(Tap "New Analysis" to start a fresh query)`,
-        timestamp: new Date(query.created_at),
-      }
-    ]);
+    setIsLoading(true);
+    
+    try {
+      // Re-run the query to get fresh results
+      const response = await aiQueryApi.rerunQuery(query.id);
+      
+      // Format the response similar to handleSendMessage
+      const responseContent = (
+        <div className="space-y-4">
+          <div>
+            <h4 className="font-semibold text-gray-800 mb-1">📊 Previous Query Results</h4>
+            <p className="text-gray-700">{response.explanation}</p>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-gray-800 mb-1">🔍 SQL Query</h4>
+            <pre className="bg-slate-900 text-gray-100 p-3 rounded-lg overflow-x-auto text-xs font-mono whitespace-pre-wrap">
+              {response.sql}
+            </pre>
+          </div>
+
+          {response.result && response.result.rows && response.result.rows.length > 0 ? (
+            <div>
+              <h4 className="font-semibold text-gray-800 mb-1">
+                📋 Results ({response.result.row_count} rows)
+              </h4>
+              {formatResultsTable(response.result)}
+            </div>
+          ) : (
+            <div className="text-gray-600 italic">No results returned from query.</div>
+          )}
+          
+          <p className="text-xs text-gray-400 italic">
+            Click "New Analysis" to start a fresh conversation.
+          </p>
+        </div>
+      );
+
+      setMessages([
+        {
+          id: `q-${query.id}`,
+          role: 'user',
+          content: query.question,
+          timestamp: new Date(query.created_at),
+        },
+        {
+          id: `a-${query.id}`,
+          role: 'assistant',
+          content: responseContent,
+          timestamp: new Date(query.created_at),
+          queryResult: response,
+        }
+      ]);
+    } catch (err: any) {
+      setMessages([
+        {
+          id: `q-${query.id}`,
+          role: 'user',
+          content: query.question,
+          timestamp: new Date(query.created_at),
+        },
+        {
+          id: `err-${query.id}`,
+          role: 'assistant',
+          content: `Could not reload query results: ${err.response?.data?.detail || 'Error occurred'}`,
+          timestamp: new Date(),
+          isError: true,
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleNewChat = () => {

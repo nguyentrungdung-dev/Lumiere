@@ -142,3 +142,36 @@ export const insightApi = {
   },
 };
 
+// Dashboard Stats Types
+export interface DashboardStats {
+  data_sources_count: number;
+  total_queries: number;
+  active_conversations: number;
+  insights_generated: number;
+  data_sources_trend: number | null;
+  queries_trend: number | null;
+  conversations_trend: number | null;
+  insights_trend: number | null;
+}
+
+export interface RecentActivityItem {
+  id: number;
+  activity_type: string;
+  description: string;
+  timestamp: string;
+}
+
+export interface DashboardResponse {
+  stats: DashboardStats;
+  recent_activities: RecentActivityItem[];
+}
+
+// Dashboard API
+export const dashboardApi = {
+  // Get user dashboard stats
+  getDashboardStats: async (): Promise<DashboardResponse> => {
+    const { data } = await api.get<DashboardResponse>('/users/me/dashboard');
+    return data;
+  },
+};
+

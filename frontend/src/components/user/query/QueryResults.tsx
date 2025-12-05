@@ -114,18 +114,24 @@ export const QueryResults: React.FC<QueryResultsProps> = ({
             Generated SQL
           </p>
           <button
-            onClick={() => navigator.clipboard.writeText(result.sql)}
-            className="text-xs text-primary-600 hover:text-primary-700 font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() => {
+              navigator.clipboard.writeText(result.sql);
+              // Could add toast notification here
+            }}
+            className="text-xs text-primary-600 hover:text-primary-700 font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center"
           >
-            Copy Code
+            <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            Copy
           </button>
         </div>
         <div className="relative">
-          <pre className="p-4 bg-slate-900 text-gray-100 rounded-xl overflow-x-auto text-sm font-mono leading-relaxed shadow-inner">
-            <code>{result.sql}</code>
+          <pre className="p-4 bg-slate-900 text-gray-100 rounded-xl overflow-x-auto text-sm font-mono leading-relaxed shadow-inner whitespace-pre-wrap">
+            <code className="language-sql">{result.sql}</code>
           </pre>
-          <div className="absolute top-0 right-0 p-2">
-            <span className="text-[10px] text-slate-500 font-mono">SQL</span>
+          <div className="absolute top-2 right-2">
+            <span className="text-[10px] text-slate-500 font-mono bg-slate-800 px-2 py-0.5 rounded">SQL</span>
           </div>
         </div>
       </div>

@@ -12,14 +12,19 @@ interface DataPreview {
   rows: any[];
 }
 
+type AggregationType = 'sum' | 'count' | 'avg' | 'min' | 'max' | 'none';
+
 export const ChartBuilder: React.FC<ChartBuilderProps> = ({ dataSources, onCreateChart }) => {
   const [selectedDataSource, setSelectedDataSource] = useState<number | null>(null);
   const [dataPreview, setDataPreview] = useState<DataPreview | null>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState<string>('');
   
   // Chart configuration
   const [chartType, setChartType] = useState<'bar' | 'line' | 'pie' | 'area' | 'scatter' | 'doughnut'>('bar');
   const [xAxisColumn, setXAxisColumn] = useState<string>('');
   const [yAxisColumn, setYAxisColumn] = useState<string>('');
+  const [aggregation, setAggregation] = useState<AggregationType>('sum');
   const [chartTitle, setChartTitle] = useState('');
   
   // Chart preview
@@ -29,7 +34,7 @@ export const ChartBuilder: React.FC<ChartBuilderProps> = ({ dataSources, onCreat
   const [isGettingAISuggestion, setIsGettingAISuggestion] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<string>('');
 
-  const isConfigValid = selectedDataSource && xAxisColumn && yAxisColumn;
+  const isConfigValid = selectedDataSource && xAxisColumn && yAxisColumn && dataPreview;
 
   const chartTypes = [
     { value: 'bar', label: 'Bar Chart', icon: '📊', description: 'Compare values across categories' },
@@ -44,6 +49,11 @@ export const ChartBuilder: React.FC<ChartBuilderProps> = ({ dataSources, onCreat
   useEffect(() => {
     if (selectedDataSource) {
       loadDataPreview(selectedDataSource);
+    } else {
+      setDataPreview(null);
+      setPreviewConfig(null);
+      setXAxisColumn('');
+      setYAxisColumn('');
     }
   }, [selectedDataSource]);
 
@@ -52,12 +62,14 @@ export const ChartBuilder: React.FC<ChartBuilderProps> = ({ dataSources, onCreat
     if (dataPreview && xAxisColumn && yAxisColumn) {
       generatePreview();
     }
-  }, [chartType, xAxisColumn, yAxisColumn, chartTitle, dataPreview]);
+  }, [chartType, xAxisColumn, yAxisColumn, chartTitle, dataPreview, aggregation]);
 
   const loadDataPreview = async (dataSourceId: number) => {
+    setIsLoadingPreview(true);
+    setPreviewError('');
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${import.meta.env.VITE_API_BASE_PATH || '/api'}/data/source/${dataSourceId}/preview?limit=100`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${import.meta.env.VITE_API_BASE_PATH || '/api'}/data/source/${dataSourceId}/preview?limit=500`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -65,44 +77,109 @@ export const ChartBuilder: React.FC<ChartBuilderProps> = ({ dataSources, onCreat
         }
       );
       
-      if (!response.ok) throw new Error('Failed to load preview');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to load preview');
+      }
       
       const data = await response.json();
       setDataPreview(data);
       
-      // Auto-select first two columns
-      if (data.columns.length >= 2) {
+      // Auto-select first string column for X-axis and first numeric column for Y-axis
+      const stringColumns = data.columns.filter((col: ColumnInfo) => 
+        col.dtype.includes('object') || col.dtype.includes('str')
+      );
+      const numericColumns = data.columns.filter((col: ColumnInfo) => 
+        col.dtype.includes('int') || col.dtype.includes('float') || col.dtype.includes('number')
+      );
+      
+      if (stringColumns.length > 0 && numericColumns.length > 0) {
+        setXAxisColumn(stringColumns[0].name);
+        setYAxisColumn(numericColumns[0].name);
+      } else if (data.columns.length >= 2) {
         setXAxisColumn(data.columns[0].name);
         setYAxisColumn(data.columns[1].name);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load data preview:', error);
+      setPreviewError(error.message || 'Failed to load data preview');
+      setDataPreview(null);
+    } finally {
+      setIsLoadingPreview(false);
     }
+  };
+
+  const aggregateData = (labels: string[], values: number[]) => {
+    // Group data by label and apply aggregation
+    const groupedData: Map<string, number[]> = new Map();
+    
+    labels.forEach((label, idx) => {
+      const existing = groupedData.get(label) || [];
+      existing.push(values[idx]);
+      groupedData.set(label, existing);
+    });
+    
+    const aggregatedLabels: string[] = [];
+    const aggregatedValues: number[] = [];
+    
+    groupedData.forEach((vals, label) => {
+      aggregatedLabels.push(label);
+      
+      switch (aggregation) {
+        case 'sum':
+          aggregatedValues.push(vals.reduce((a, b) => a + b, 0));
+          break;
+        case 'count':
+          aggregatedValues.push(vals.length);
+          break;
+        case 'avg':
+          aggregatedValues.push(vals.reduce((a, b) => a + b, 0) / vals.length);
+          break;
+        case 'min':
+          aggregatedValues.push(Math.min(...vals));
+          break;
+        case 'max':
+          aggregatedValues.push(Math.max(...vals));
+          break;
+        case 'none':
+        default:
+          aggregatedValues.push(vals[vals.length - 1]); // Take last value
+      }
+    });
+    
+    return { labels: aggregatedLabels, values: aggregatedValues };
   };
 
   const generatePreview = () => {
     if (!dataPreview || !xAxisColumn || !yAxisColumn) return;
 
     // Extract labels and values from data
-    const labels: string[] = [];
-    const values: number[] = [];
+    const rawLabels: string[] = [];
+    const rawValues: number[] = [];
 
     dataPreview.rows.forEach((row) => {
-      const label = String(row[xAxisColumn] || '');
+      const label = String(row[xAxisColumn] ?? '');
       const value = parseFloat(row[yAxisColumn]) || 0;
-      labels.push(label);
-      values.push(value);
+      rawLabels.push(label);
+      rawValues.push(value);
     });
+
+    // Apply aggregation
+    const { labels, values } = aggregateData(rawLabels, rawValues);
+    
+    // Limit to top 20 for readability
+    const limitedLabels = labels.slice(0, 20);
+    const limitedValues = values.slice(0, 20);
 
     // Create chart config
     const config: ChartConfig = {
       type: chartType,
-      title: chartTitle || `${yAxisColumn} by ${xAxisColumn}`,
-      labels: labels,
+      title: chartTitle || `${aggregation !== 'none' ? aggregation.toUpperCase() + ' of ' : ''}${yAxisColumn} by ${xAxisColumn}`,
+      labels: limitedLabels,
       datasets: [
         {
           label: yAxisColumn,
-          data: values,
+          data: limitedValues,
         },
       ],
     };
@@ -249,12 +326,33 @@ export const ChartBuilder: React.FC<ChartBuilderProps> = ({ dataSources, onCreat
             </div>
           )}
 
+          {/* Loading State */}
+          {isLoadingPreview && (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-500">Loading data...</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {previewError && (
+            <div className="p-3 bg-red-50 border border-red-100 rounded-lg">
+              <p className="text-sm text-red-600">{previewError}</p>
+            </div>
+          )}
+
           {/* 3. Encodings */}
-          {selectedDataSource && dataPreview && (
+          {selectedDataSource && dataPreview && !isLoadingPreview && (
             <div className="space-y-4">
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 3. Data Mapping
               </label>
+              
+              {/* Data Info */}
+              <div className="p-2 bg-gray-50 rounded-lg border border-gray-100 text-xs text-gray-600">
+                <span className="font-medium">{dataPreview.rows.length}</span> rows, 
+                <span className="font-medium ml-1">{dataPreview.columns.length}</span> columns
+              </div>
               
               {/* X-Axis */}
               <div>
@@ -292,6 +390,26 @@ export const ChartBuilder: React.FC<ChartBuilderProps> = ({ dataSources, onCreat
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Aggregation */}
+              <div>
+                <span className="text-xs font-medium text-gray-700 mb-1 block">Aggregation</span>
+                <select
+                  value={aggregation}
+                  onChange={(e) => setAggregation(e.target.value as AggregationType)}
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
+                >
+                  <option value="sum">Sum</option>
+                  <option value="count">Count</option>
+                  <option value="avg">Average</option>
+                  <option value="min">Minimum</option>
+                  <option value="max">Maximum</option>
+                  <option value="none">None (raw values)</option>
+                </select>
+                <p className="mt-1 text-xs text-gray-400">
+                  How to combine values for each category
+                </p>
               </div>
 
               {/* Title */}

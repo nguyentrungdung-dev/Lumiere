@@ -15,14 +15,14 @@ ENV VITE_API_BASE_PATH=$VITE_API_BASE_PATH
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies using yarn (more reliable than npm with 5 minute timeout)
+RUN yarn install --network-timeout 300000
 
 # Copy application code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN yarn build
 
 # Production stage
 FROM nginx:alpine

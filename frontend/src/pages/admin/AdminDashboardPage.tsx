@@ -125,7 +125,7 @@ const AdminDashboardPage: React.FC = () => {
             <>
               <AdminStatsCard
                 title="Total Users"
-                value={stats.total_users.toLocaleString()}
+                value={(stats.total_users ?? 0).toLocaleString()}
                 icon={
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -140,7 +140,7 @@ const AdminDashboardPage: React.FC = () => {
               />
               <AdminStatsCard
                 title="Data Sources"
-                value={stats.total_data_sources.toLocaleString()}
+                value={(stats.total_data_sources ?? 0).toLocaleString()}
                 icon={
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -155,7 +155,7 @@ const AdminDashboardPage: React.FC = () => {
               />
               <AdminStatsCard
                 title="Total Queries"
-                value={stats.total_queries.toLocaleString()}
+                value={(stats.total_queries ?? 0).toLocaleString()}
                 icon={
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
