@@ -6,16 +6,7 @@ from typing import Optional
 
 
 def mask_email(email: Optional[str]) -> Optional[str]:
-    """
-    Mask email address for privacy.
-    Example: john@gmail.com -> joh***@***il.com
-    
-    Args:
-        email: Email address to mask
-        
-    Returns:
-        Masked email or None if input is None
-    """
+   
     if not email:
         return None
     
@@ -39,16 +30,7 @@ def mask_email(email: Optional[str]) -> Optional[str]:
 
 
 def mask_phone(phone: Optional[str]) -> Optional[str]:
-    """
-    Mask phone number for privacy.
-    Example: 1234567891 -> 123*******1
-    
-    Args:
-        phone: Phone number to mask
-        
-    Returns:
-        Masked phone or None if input is None
-    """
+   
     if not phone:
         return None
     
@@ -65,16 +47,7 @@ def mask_phone(phone: Optional[str]) -> Optional[str]:
 
 
 def mask_address(address: Optional[str]) -> Optional[str]:
-    """
-    Mask address for privacy.
-    Just return hidden message.
     
-    Args:
-        address: Address to mask
-        
-    Returns:
-        Masked address or None if input is None
-    """
     if not address:
         return None
     
@@ -82,15 +55,7 @@ def mask_address(address: Optional[str]) -> Optional[str]:
 
 
 def calculate_storage_size(size_bytes: int) -> str:
-    """
-    Convert bytes to human-readable format.
     
-    Args:
-        size_bytes: Size in bytes
-        
-    Returns:
-        Human-readable size string (e.g., "1.5 GB")
-    """
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
         if size_bytes < 1024.0:
             return f"{size_bytes:.1f} {unit}"
@@ -99,15 +64,7 @@ def calculate_storage_size(size_bytes: int) -> str:
 
 
 def format_percentage(value: float) -> str:
-    """
-    Format percentage value.
     
-    Args:
-        value: Percentage value (e.g., 12.5)
-        
-    Returns:
-        Formatted percentage string (e.g., "+12.5%")
-    """
     sign = '+' if value > 0 else ''
     return f"{sign}{value:.1f}%"
 

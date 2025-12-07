@@ -25,10 +25,7 @@ Base = declarative_base()
 
 
 def get_db() -> Generator[Session, None, None]:
-    """
-    Dependency function to get database session.
-    Yields a database session and closes it after use.
-    """
+    
     db = SessionLocal()
     try:
         yield db

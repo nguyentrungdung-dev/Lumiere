@@ -73,17 +73,7 @@ def create_user(db: Session, user_data: UserCreate) -> User:
 
 
 def authenticate_user(db: Session, username: str, password: str) -> Optional[User]:
-    """
-    Authenticate a user with username and password.
     
-    Args:
-        db: Database session
-        username: Username
-        password: Plain text password
-        
-    Returns:
-        User object if authentication successful, None otherwise
-    """
     user = get_user_by_username(db, username)
     if not user:
         return None
@@ -95,20 +85,7 @@ def authenticate_user(db: Session, username: str, password: str) -> Optional[Use
 
 
 def update_user(db: Session, user_id: int, user_data: UserUpdate) -> User:
-    """
-    Update user information.
     
-    Args:
-        db: Database session
-        user_id: User ID to update
-        user_data: Updated user data
-        
-    Returns:
-        Updated user object
-        
-    Raises:
-        HTTPException: If user not found
-    """
     user = get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(

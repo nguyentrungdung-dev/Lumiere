@@ -10,7 +10,6 @@ from app.core.config import settings
 
 
 class LLMService:
-    """Service for interacting with OpenAI LLM"""
     
     def __init__(self):
         self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -23,17 +22,7 @@ class LLMService:
         table_schema: Dict[str, Any],
         sample_data: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """
-        Generate SQL query from natural language question.
         
-        Args:
-            question: User's natural language question
-            table_schema: Schema information (columns, types)
-            sample_data: Sample rows from the data
-        
-        Returns:
-            Dict with 'sql', 'explanation', and 'confidence'
-        """
         # Build prompt
         prompt = self._build_sql_prompt(question, table_schema, sample_data)
         

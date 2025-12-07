@@ -161,20 +161,7 @@ async def get_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Get user profile by ID.
     
-    Args:
-        user_id: User ID
-        db: Database session
-        current_user: Current authenticated user
-        
-    Returns:
-        User object
-        
-    Raises:
-        HTTPException: If user not found
-    """
     user = get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(
@@ -191,22 +178,7 @@ async def update_user_info(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Update user information.
-    Only the user themselves can update their own profile.
     
-    Args:
-        user_id: User ID to update
-        user_data: Updated user data
-        db: Database session
-        current_user: Current authenticated user
-        
-    Returns:
-        Updated user object
-        
-    Raises:
-        HTTPException: If user not authorized or user not found
-    """
     # Check if user is updating their own profile
     if current_user.id != user_id:
         raise HTTPException(

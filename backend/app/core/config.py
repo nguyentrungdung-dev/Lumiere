@@ -9,7 +9,6 @@ from openai import OpenAI
 
 
 class Settings(BaseSettings):
-    """Application settings loaded from environment variables."""
     
     # Database
     DATABASE_URL: str
@@ -45,7 +44,7 @@ class Settings(BaseSettings):
     
     @property
     def allowed_origins_list(self) -> List[str]:
-        """Parse ALLOWED_ORIGINS string into a list."""
+        
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
     
     class Config:
