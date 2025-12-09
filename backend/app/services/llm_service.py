@@ -12,7 +12,10 @@ from app.core.config import settings
 class LLMService:
     
     def __init__(self):
-        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        self.client = OpenAI(
+            api_key=settings.OPENAI_API_KEY,
+            timeout=45.0  # 45 second timeout for OpenAI API calls
+        )
         self.model = "gpt-4o-mini"  # Using GPT-4 Turbo for better SQL generation
         self.temperature = 0.1  # Low temperature for more deterministic outputs
     
@@ -281,4 +284,70 @@ Focus on:
 Keep the insights concise (3-5 sentences total) and business-focused.
 """
         return prompt
+    
+    def general_chat(
+        self,
+        message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None
+    ) -> str:
+        """
+        Handle general AI chat (not data-specific).
+        
+        Args:
+            message: User's message
+            conversation_history: Optional previous messages for context
+        
+        Returns:
+            AI assistant response
+        """
+        try:
+            # Build messages array
+            messages = [
+                {
+                    "role": "system",
+                    "content": """You are Lumiere AI Assistant, a helpful, friendly, and knowledgeable AI assistant. 
+You help users with various tasks including:
+- Answering questions on any topic
+- Providing explanations and guidance
+- Helping with problem-solving
+- Offering advice and recommendations
+- Discussing data analysis, business intelligence, and SQL topics
+
+You should:
+- Be conversational and friendly
+- Provide clear, concise, and accurate information
+- Ask clarifying questions when needed
+- Admit when you don't know something
+- Be helpful and supportive
+
+Keep responses clear and well-structured. Use markdown formatting when appropriate."""
+                }
+            ]
+            
+            # Add conversation history if provided
+            if conversation_history:
+                for msg in conversation_history[-10:]:  # Last 10 messages for context
+                    messages.append({
+                        "role": msg.get("role", "user"),
+                        "content": msg.get("content", "")
+                    })
+            
+            # Add current message
+            messages.append({
+                "role": "user",
+                "content": message
+            })
+            
+            # Call OpenAI
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=0.7,  # Higher temperature for more natural conversation
+                max_tokens=1000
+            )
+            
+            return response.choices[0].message.content
+            
+        except Exception as e:
+            raise Exception(f"General chat error: {str(e)}")
 

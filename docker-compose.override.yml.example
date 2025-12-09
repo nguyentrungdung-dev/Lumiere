@@ -1,0 +1,39 @@
+# Docker Compose Override Example
+# Copy this to docker-compose.override.yml for local development customizations
+# The override file is automatically merged with docker-compose.yml
+
+services:
+  # Example: Enable backend hot-reload for development
+  backend:
+    volumes:
+      - ./backend:/app
+    environment:
+      - DEBUG=True
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Example: Use local frontend development server instead of nginx
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     target: builder
+  #   command: npm run dev -- --host 0.0.0.0 --port 3000
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - VITE_API_URL=http://localhost:8000
+  #     - VITE_API_BASE_PATH=/api/v1
+
+  # Example: Add pgAdmin for database management
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@lumiere.local
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   ports:
+  #     - "5050:80"
+  #   depends_on:
+  #     - database
+  #   networks:
+  #     - lumiere-network
+

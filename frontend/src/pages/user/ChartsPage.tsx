@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import WorkflowNav from '../../components/user/layout/WorkflowNav';
+import UserLayout from '../../components/user/layout/UserLayout';
 import { ChartRenderer } from '../../components/user/charts/ChartRenderer';
 import { ChartBuilder } from '../../components/user/charts/ChartBuilder';
 import { dataSourceApi } from '../../services/dataApi';
@@ -47,8 +47,8 @@ export const ChartsPage: React.FC = () => {
   const displayChart = chartData?.config || createdChart;
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <WorkflowNav />
+    <UserLayout title="Charts">
+      <div className="space-y-4 sm:space-y-6">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -219,7 +219,8 @@ export const ChartsPage: React.FC = () => {
           </div>
         </>
       )}
-    </div>
+      </div>
+    </UserLayout>
   );
 };
 

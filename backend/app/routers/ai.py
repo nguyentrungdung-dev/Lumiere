@@ -18,6 +18,8 @@ from app.schemas.ai_query import (
     QueryHistoryResponse,
     QueryDetailResponse,
     RerunQueryRequest,
+    GeneralChatRequest,
+    GeneralChatResponse,
 )
 from app.schemas.chart_insight import (
     ChartGenerationRequest,
@@ -25,6 +27,7 @@ from app.schemas.chart_insight import (
     InsightGenerationRequest,
     InsightGenerationResponse,
 )
+from app.services.llm_service import LLMService
 
 
 router = APIRouter(prefix="/ai", tags=["AI Query"])
@@ -116,4 +119,28 @@ async def generate_insight(
 ):
     
     return await service.generate_insight(request.query_id, current_user)
+
+
+@router.post("/chat", response_model=GeneralChatResponse)
+async def general_chat(
+    request: GeneralChatRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    General AI chat endpoint for non-data-specific conversations.
+    Allows users to ask any questions and have general conversations with the AI.
+    """
+    try:
+        llm_service = LLMService()
+        response_text = llm_service.general_chat(
+            message=request.message,
+            conversation_history=request.conversation_history
+        )
+        
+        return GeneralChatResponse(message=response_text)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Chat error: {str(e)}"
+        )
 

@@ -7,6 +7,7 @@ const api: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 60000, // 60 seconds timeout for API calls (LLM operations can take time)
 });
 
 // Request interceptor - Add auth token to requests
@@ -75,6 +76,18 @@ export const userApi = {
   // Update user profile
   updateUser: async (userId: number, userData: UserUpdate): Promise<User> => {
     const { data } = await api.patch<User>(`/users/${userId}`, userData);
+    return data;
+  },
+};
+
+// General Chat API
+export const chatApi = {
+  // Send a general chat message (not data-specific)
+  sendMessage: async (message: string, conversationHistory?: Array<{role: string; content: string}>): Promise<{message: string; timestamp: string}> => {
+    const { data } = await api.post('/ai/chat', {
+      message,
+      conversation_history: conversationHistory
+    });
     return data;
   },
 };

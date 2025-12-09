@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import UserLayout from '../../components/user/layout/UserLayout';
 import { ChatInterface } from '../../components/user/insights/ChatInterface';
 import { ChatSidebar } from '../../components/user/insights/ChatSidebar';
 import { aiQueryApi, dataSourceApi, insightApi } from '../../services/dataApi';
+import { chatApi } from '../../services/userApi';
 import type { AIQuery, DataSource, AIQueryResponse } from '../../types';
+
+// Chat mode type
+type ChatMode = 'data-analysis' | 'general-chat';
 
 // Helper to format messages
 interface Message {
@@ -19,6 +24,7 @@ export const InsightsPage: React.FC = () => {
   const location = useLocation();
   
   // State
+  const [chatMode, setChatMode] = useState<ChatMode>('data-analysis');
   const [messages, setMessages] = useState<Message[]>([]);
   const [history, setHistory] = useState<AIQuery[]>([]);
   const [dataSources, setDataSources] = useState<DataSource[]>([]);
@@ -113,6 +119,59 @@ export const InsightsPage: React.FC = () => {
   };
 
   const handleSendMessage = async (text: string) => {
+    // Handle based on chat mode
+    if (chatMode === 'general-chat') {
+      await handleGeneralChat(text);
+    } else {
+      await handleDataAnalysis(text);
+    }
+  };
+
+  const handleGeneralChat = async (text: string) => {
+    // Add user message
+    const userMsg: Message = {
+      id: `usr-${Date.now()}`,
+      role: 'user',
+      content: text,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, userMsg]);
+    setIsLoading(true);
+
+    try {
+      // Build conversation history for context
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: typeof msg.content === 'string' ? msg.content : 'Complex content'
+      }));
+
+      // Call general chat API
+      const response = await chatApi.sendMessage(text, conversationHistory);
+
+      // Add assistant message
+      const aiMsg: Message = {
+        id: `ai-${Date.now()}`,
+        role: 'assistant',
+        content: response.message,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, aiMsg]);
+
+    } catch (err: any) {
+      const errorMsg: Message = {
+        id: `err-${Date.now()}`,
+        role: 'assistant',
+        content: `❌ Error: ${err.response?.data?.detail || 'Failed to get response. Please try again.'}`,
+        timestamp: new Date(),
+        isError: true
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDataAnalysis = async (text: string) => {
     if (!selectedDataSource) {
       setMessages(prev => [...prev, {
         id: `err-${Date.now()}`,
@@ -206,28 +265,70 @@ export const InsightsPage: React.FC = () => {
       // Generate additional insights if we have results
       if (response.result && response.result.rows && response.result.rows.length > 0) {
         try {
-          const insightResponse = await insightApi.generateInsight({ query_id: response.query_id });
-          
-          // Add insight as a follow-up message
-          const insightMsg: Message = {
-            id: `insight-${Date.now()}`,
+          // Add a "generating insights" message
+          const generatingMsg: Message = {
+            id: `gen-${Date.now()}`,
             role: 'assistant',
             content: (
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
-                <h4 className="font-semibold text-amber-800 mb-2 flex items-center">
-                  <span className="mr-2">🧠</span> AI-Generated Insights
-                </h4>
-                <div className="text-amber-900 text-sm whitespace-pre-wrap leading-relaxed">
-                  {insightResponse.insight_text}
-                </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-blue-700 text-sm flex items-center">
+                  <span className="mr-2">🧠</span> Generating AI insights...
+                </p>
               </div>
             ),
             timestamp: new Date(),
           };
-          setMessages(prev => [...prev, insightMsg]);
-        } catch (insightErr) {
+          setMessages(prev => [...prev, generatingMsg]);
+
+          const insightResponse = await insightApi.generateInsight({ query_id: response.query_id });
+          
+          // Remove the "generating" message and add the actual insight
+          setMessages(prev => {
+            const filtered = prev.filter(m => m.id !== generatingMsg.id);
+            return [
+              ...filtered,
+              {
+                id: `insight-${Date.now()}`,
+                role: 'assistant',
+                content: (
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-amber-800 mb-2 flex items-center">
+                      <span className="mr-2">🧠</span> AI-Generated Insights
+                    </h4>
+                    <div className="text-amber-900 text-sm whitespace-pre-wrap leading-relaxed">
+                      {insightResponse.insight_text}
+                    </div>
+                  </div>
+                ),
+                timestamp: new Date(),
+              }
+            ];
+          });
+        } catch (insightErr: any) {
+          // Remove the "generating" message
+          setMessages(prev => prev.filter(m => !m.id.startsWith('gen-')));
+          
+          // Check if it's a timeout error
+          const isTimeout = insightErr.code === 'ECONNABORTED' || insightErr.message?.includes('timeout');
+          
           console.log('Could not generate additional insights:', insightErr);
-          // Silent fail - insights are optional
+          
+          // Show a subtle message about insight generation failure (optional)
+          if (isTimeout) {
+            const timeoutMsg: Message = {
+              id: `timeout-${Date.now()}`,
+              role: 'assistant',
+              content: (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <p className="text-gray-600 text-xs italic">
+                    ℹ️ AI insight generation took too long and was skipped. The query results above are still valid.
+                  </p>
+                </div>
+              ),
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, timeoutMsg]);
+          }
         }
       }
 
@@ -334,34 +435,89 @@ export const InsightsPage: React.FC = () => {
     setSelectedQueryId(null);
   };
 
+  const handleModeChange = (mode: ChatMode) => {
+    setChatMode(mode);
+    setMessages([]);
+    setSelectedQueryId(null);
+  };
+
   return (
-    <div className="flex h-[calc(100vh-7rem)] bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-      {/* Sidebar */}
-      <ChatSidebar 
-        history={history} 
-        onSelectQuery={handleSelectQuery} 
-        onNewChat={handleNewChat}
-        selectedQueryId={selectedQueryId}
-      />
+    <UserLayout title="Insights" fullWidth>
+      <div className="flex h-[calc(100vh-12rem)] bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        {/* Sidebar - Only show in data analysis mode */}
+        {chatMode === 'data-analysis' && (
+          <ChatSidebar 
+            history={history} 
+            onSelectQuery={handleSelectQuery} 
+            onNewChat={handleNewChat}
+            selectedQueryId={selectedQueryId}
+          />
+        )}
 
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Header with Data Source Selector */}
-          <div className="h-16 border-b border-gray-100 flex items-center justify-between px-6 bg-white">
-            <h2 className="font-bold text-gray-900">AI Assistant</h2>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-500">Data Source:</span>
-              <select
-                value={selectedDataSource || ''}
-                onChange={(e) => setSelectedDataSource(Number(e.target.value))}
-                className="text-sm border-none bg-gray-50 rounded-lg py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-primary-500"
-              >
-                {dataSources.length === 0 && <option value="">No data sources</option>}
-                {dataSources.map(ds => (
-                  <option key={ds.id} value={ds.id}>{ds.name}</option>
-                ))}
-              </select>
+          {/* Header with Mode Toggle and Data Source Selector */}
+          <div className="border-b border-gray-100 bg-white">
+            {/* Mode Toggle */}
+            <div className="px-6 pt-4 pb-2">
+              <div className="inline-flex bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => handleModeChange('data-analysis')}
+                  className={`
+                    px-4 py-2 rounded-md text-sm font-medium transition-all
+                    ${chatMode === 'data-analysis'
+                      ? 'bg-white text-primary-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                    }
+                  `}
+                >
+                  📊 Data Analysis
+                </button>
+                <button
+                  onClick={() => handleModeChange('general-chat')}
+                  className={`
+                    px-4 py-2 rounded-md text-sm font-medium transition-all
+                    ${chatMode === 'general-chat'
+                      ? 'bg-white text-primary-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                    }
+                  `}
+                >
+                  💬 General Chat
+                </button>
+              </div>
             </div>
+
+            {/* Data Source Selector - Only show in data analysis mode */}
+            {chatMode === 'data-analysis' && (
+              <div className="px-6 pb-4 flex items-center justify-between">
+                <p className="text-sm text-gray-500">
+                  Ask questions about your data and get SQL-powered insights
+                </p>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-500">Data Source:</span>
+                  <select
+                    value={selectedDataSource || ''}
+                    onChange={(e) => setSelectedDataSource(Number(e.target.value))}
+                    className="text-sm border-none bg-gray-50 rounded-lg py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-primary-500"
+                  >
+                    {dataSources.length === 0 && <option value="">No data sources</option>}
+                    {dataSources.map(ds => (
+                      <option key={ds.id} value={ds.id}>{ds.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* General Chat description */}
+            {chatMode === 'general-chat' && (
+              <div className="px-6 pb-4">
+                <p className="text-sm text-gray-500">
+                  Ask me anything! I can help with explanations, advice, problem-solving, and more.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Chat Interface */}
@@ -370,10 +526,16 @@ export const InsightsPage: React.FC = () => {
               messages={messages} 
               isLoading={isLoading} 
               onSendMessage={handleSendMessage}
+              placeholder={
+                chatMode === 'general-chat'
+                  ? "Ask me anything..."
+                  : "Ask a question about your data..."
+              }
             />
           </div>
         </div>
-    </div>
+      </div>
+    </UserLayout>
   );
 };
 

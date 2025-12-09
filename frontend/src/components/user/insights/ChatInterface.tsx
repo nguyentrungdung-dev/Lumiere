@@ -23,14 +23,59 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const [input, setInput] = React.useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const scrollTimeoutRef = useRef<number | null>(null);
+  const isUserScrollingRef = useRef(false);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Check if user is near the bottom of the scroll container
+  const isNearBottom = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return true;
+    
+    const threshold = 100; // pixels from bottom
+    const position = container.scrollTop + container.clientHeight;
+    const bottom = container.scrollHeight;
+    
+    return bottom - position < threshold;
   };
 
+  const scrollToBottom = (smooth: boolean = true) => {
+    // Clear any pending scroll
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    // Only scroll if user is near the bottom
+    if (isNearBottom()) {
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
+      }, 100);
+    }
+  };
+
+  // Detect user scrolling
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      // Mark that user has scrolled (for future reference if needed)
+      isUserScrollingRef.current = true;
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    // Use auto scroll when loading to prevent animation conflicts
+    scrollToBottom(!isLoading);
+  }, [messages.length, isLoading]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +87,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   return (
     <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/30">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/30">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import WorkflowNav from '../../components/user/layout/WorkflowNav';
+import UserLayout from '../../components/user/layout/UserLayout';
 import { QueryInterface } from '../../components/user/query/QueryInterface';
 import { QueryResults } from '../../components/user/query/QueryResults';
 import { QueryHistory } from '../../components/user/query/QueryHistory';
@@ -110,8 +110,8 @@ export const AIQueryPage: React.FC = () => {
   };
 
   return (
-    <div className="h-full space-y-4 sm:space-y-6">
-      <WorkflowNav />
+    <UserLayout title="AI Query">
+      <div className="h-full space-y-4 sm:space-y-6">
       
       {/* Header */}
       <div>
@@ -194,7 +194,8 @@ export const AIQueryPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </UserLayout>
   );
 };
 

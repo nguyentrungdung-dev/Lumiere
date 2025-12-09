@@ -14,6 +14,7 @@ class QueryStatus(str, Enum):
     SUCCESS = "success"
     ERROR = "error"
     PENDING = "pending"
+    RUNNING = "running"
 
 
 # --- AI Query Request/Response Schemas ---
@@ -139,4 +140,40 @@ class AIQueryError(BaseModel):
     error: str
     detail: Optional[str] = None
     sql: Optional[str] = None
+
+
+# --- General Chat Schemas ---
+
+class GeneralChatRequest(BaseModel):
+    """Request for general AI chat (not data-specific)"""
+    message: str = Field(..., min_length=1, max_length=2000, description="User message")
+    conversation_history: Optional[List[Dict[str, str]]] = Field(
+        default=None, 
+        description="Previous conversation messages for context"
+    )
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "message": "Can you help me understand what SQL is?",
+                "conversation_history": [
+                    {"role": "user", "content": "Hello"},
+                    {"role": "assistant", "content": "Hi! How can I help you today?"}
+                ]
+            }
+        }
+
+
+class GeneralChatResponse(BaseModel):
+    """Response from general AI chat"""
+    message: str = Field(..., description="AI assistant response")
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "message": "SQL (Structured Query Language) is a programming language...",
+                "timestamp": "2024-01-01T12:00:00"
+            }
+        }
 

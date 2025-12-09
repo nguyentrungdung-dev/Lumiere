@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import WorkflowNav from '../../components/user/layout/WorkflowNav';
+import UserLayout from '../../components/user/layout/UserLayout';
 import { FileUpload } from '../../components/user/data/FileUpload';
 import { DataSourceCard } from '../../components/user/data/DataSourceCard';
 import { DataPreviewModal } from '../../components/user/data/DataPreviewModal';
@@ -85,8 +85,8 @@ export const DataSourcesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <WorkflowNav />
+    <UserLayout title="Data Sources">
+      <div className="space-y-4 sm:space-y-6">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-xl border border-gray-100 shadow-soft">
@@ -298,7 +298,8 @@ export const DataSourcesPage: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </UserLayout>
   );
 };
 

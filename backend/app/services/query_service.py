@@ -123,7 +123,7 @@ class QueryService:
                 result, exec_time = self._execute_sql(df, sql_query)
                 query_record.status = "success"
                 query_record.execution_time_ms = exec_time
-                query_record.executed_rows = result["row_count"]
+                query_record.executed_rows = result.row_count
             except Exception as e:
                 error = str(e)
                 query_status = QueryStatus.ERROR
